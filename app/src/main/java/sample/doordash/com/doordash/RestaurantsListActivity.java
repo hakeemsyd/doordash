@@ -57,7 +57,7 @@ public class RestaurantsListActivity extends Activity {
                         List<Restaurant> restaurants = new ArrayList<>();
                         for(int i = 0; i < response.length(); i++){
                             try {
-                                restaurants.add(new Restaurant(response.getJSONObject(i)));
+                                restaurants.add(new Restaurant(response.getJSONObject(i), false));
                             } catch (JSONException e) {
                                 continue;
                             }

@@ -9,17 +9,24 @@ import org.json.JSONObject;
 
 public class Restaurant {
     private String mName;
+    private boolean mFav;
 
-    public Restaurant(JSONObject obj){
+    public Restaurant(JSONObject obj, boolean fav){
         try {
             mName = obj.getString("name");
         } catch (JSONException e) {
             e.printStackTrace();
             mName = "";
         }
+
+        mFav = fav;
     }
 
     public String getName(){
         return mName;
+    }
+
+    public boolean isFavourite(){
+        return mFav;
     }
 }

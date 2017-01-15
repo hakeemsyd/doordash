@@ -13,11 +13,16 @@
         android:layout_weight="0.9"
         android:padding="8dp"/>
 
-    <ImageButton
+    <ToggleButton
         android:id="@+id/favorite"
-        android:src="@drawable/ic_favorite_border_black_18dp"
+        android:background="@drawable/check"
         android:layout_gravity="right"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:textOn=""
+        android:textOff=""
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:layout_centerVertical="true"
         android:layout_weight="0.1"/>
 </LinearLayout>
