@@ -4,10 +4,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -35,6 +36,15 @@ public class LoginActivity extends Activity {
     private EditText mUser;
     private EditText mPass;
     private Preferences mPrefs;
+    private User mLoggedInUser;
+    private TextView mName;
+    private TextView mPhone;
+    private TextView mAddress;
+    private TextView mCity;
+    private Button mLogout;
+    private Button mContinue;
+    private LinearLayout mLoginLayout;
+    private LinearLayout mUserInfoLayout;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,12 +52,23 @@ public class LoginActivity extends Activity {
         setContentView(R.layout.activity_login);
         mReqQueue = Volley.newRequestQueue(this);
         mPrefs = new Preferences(this);
+        mLoggedInUser = new User();
 
         mLogin = (Button) findViewById(R.id.login);
         mGuest = (Button) findViewById(R.id.guest_user);
+        mContinue = (Button) findViewById(R.id.btn_continue);
+        mLogout = (Button) findViewById(R.id.btn_logout);
 
         mUser = (EditText) findViewById(R.id.username);
         mPass = (EditText) findViewById(R.id.password);
+
+        mName = (TextView) findViewById(R.id.userinfo_name);
+        mPhone = (TextView) findViewById(R.id.userinfo_phone);
+        mAddress = (TextView) findViewById(R.id.userinfo_address);
+        mCity = (TextView) findViewById(R.id.userinfo_city);
+
+        mLoginLayout = (LinearLayout) findViewById(R.id.login_prompt_layout);
+        mUserInfoLayout = (LinearLayout) findViewById(R.id.user_info_layout);
 
         mLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,6 +88,37 @@ public class LoginActivity extends Activity {
                 startActivity(i);
             }
         });
+
+        mLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPrefs.removeToken();
+                showLoginScreen();
+            }
+        });
+
+        mContinue.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(getApplicationContext(), RestaurantsListActivity.class);
+                startActivity(i);
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(!mPrefs.getToken().isEmpty()){
+            showUserInfo();
+            try {
+                onTokenRetrieved(mPrefs.getToken());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }else{
+            showLoginScreen();
+        }
     }
 
     private synchronized void doLogin() throws JSONException {
@@ -80,6 +132,7 @@ public class LoginActivity extends Activity {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
+                        showLoginScreen();
                         setInProgress(false);
                         try {
                             String token = response.getString(Constants.KEY_TOKEN);
@@ -96,13 +149,14 @@ public class LoginActivity extends Activity {
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "Login failure: " + error.getMessage(), Toast.LENGTH_LONG).show();
                         setInProgress(false);
+                        showLoginScreen();
                     }
                 });
 
         mReqQueue.add(jReq);
     }
 
-    private void onTokenRetrieved(final String token) throws JSONException {
+    private synchronized void onTokenRetrieved(final String token) throws JSONException {
         setInProgress(true);
 
         JsonObjectRequest jReq = new JsonObjectRequest(Constants.API_ABOUT_ME,null,
@@ -112,6 +166,8 @@ public class LoginActivity extends Activity {
                         setInProgress(false);
                         try {
                             Toast.makeText(getApplicationContext(), "Login Success: " + response.getString("first_name"), Toast.LENGTH_LONG).show();
+                            mLoggedInUser = User.CreateFromJSONObject(response);
+                            showUserInfo();
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -123,6 +179,7 @@ public class LoginActivity extends Activity {
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "Me failure: " + error.getMessage(), Toast.LENGTH_LONG).show();
                         setInProgress(false);
+                        showLoginScreen();
                     }
                 }
         ){
@@ -143,5 +200,23 @@ public class LoginActivity extends Activity {
         mGuest.setEnabled(!prog);
         mUser.setEnabled(!prog);
         mPass.setEnabled(!prog);
+    }
+
+    private void showUserInfo(){
+        mName.setText(mLoggedInUser.getmName());
+        mPhone.setText(mLoggedInUser.getmPhone());
+        mCity.setText(mLoggedInUser.getmCity());
+        mAddress.setText(mLoggedInUser.getmAddress());
+
+        mUserInfoLayout.setVisibility(View.VISIBLE);
+        mLoginLayout.setVisibility(View.GONE);
+    }
+
+    private void showLoginScreen(){
+        mUser.setText("");
+        mPass.setText("");
+        mPrefs.removeToken();
+        mUserInfoLayout.setVisibility(View.GONE);
+        mLoginLayout.setVisibility(View.VISIBLE);
     }
 }

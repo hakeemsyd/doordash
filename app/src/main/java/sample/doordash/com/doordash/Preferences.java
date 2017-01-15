@@ -22,8 +22,7 @@ public class Preferences {
     }
 
     public boolean isFavourite(String id){
-        boolean f = mPrefs.getBoolean(id, false);
-       return f;
+        return mPrefs.getBoolean(id, false);
     }
 
     public void removeFavourite(String id){
@@ -38,7 +37,14 @@ public class Preferences {
         editor.commit();
     }
 
+    public void removeToken(){
+        SharedPreferences.Editor editor = mPrefs.edit();
+        editor.remove(KEY_TOKEN);
+        editor.commit();
+    }
+
     public String getToken(){
-        return mPrefs.getString(KEY_TOKEN, "");
+        String tok = mPrefs.getString(KEY_TOKEN, "");
+        return tok ;
     }
 }
