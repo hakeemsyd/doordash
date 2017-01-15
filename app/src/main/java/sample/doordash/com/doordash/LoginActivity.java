@@ -16,7 +16,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
+import co[j  m.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,6 +46,29 @@ public class LoginActivity extends Activity {
     private LinearLayout mLoginLayout;
     private LinearLayout mUserInfoLayout;
 
+    private final View.OnClickListener mLoginButtonClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            doLogin();
+        }
+    };
+
+    private final View.OnClickListener mLogoutButtonClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mPrefs.removeToken();
+            showLoginScreen();
+        }
+    };
+
+    private final View.OnClickListener mGuestButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Intent i = new Intent(getApplicationContext(), RestaurantsListActivity.class);
+            startActivity(i);
+        }
+    };
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,63 +93,61 @@ public class LoginActivity extends Activity {
         mLoginLayout = (LinearLayout) findViewById(R.id.login_prompt_layout);
         mUserInfoLayout = (LinearLayout) findViewById(R.id.user_info_layout);
 
-        mLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    doLogin();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        mGuest.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(getApplicationContext(), RestaurantsListActivity.class);
-                startActivity(i);
-            }
-        });
-
-        mLogout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mPrefs.removeToken();
-                showLoginScreen();
-            }
-        });
-
-        mContinue.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(getApplicationContext(), RestaurantsListActivity.class);
-                startActivity(i);
-            }
-        });
+        mLogin.setOnClickListener(mLoginButtonClickListener);
+        mGuest.setOnClickListener(mGuestButtonListener);
+        mLogout.setOnClickListener(mLogoutButtonClickListener);
+        mContinue.setOnClickListener(mGuestButtonListener);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if(!mPrefs.getToken().isEmpty()){
+        if (!mPrefs.getToken().isEmpty()) {
             showUserInfo();
-            try {
-                onTokenRetrieved(mPrefs.getToken());
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }else{
+            onTokenRetrieved(mPrefs.getToken());
+        } else {
             showLoginScreen();
         }
     }
 
-    private synchronized void doLogin() throws JSONException {
-        setInProgress(true);
-        JSONObject creds = new JSONObject();
+    private void setInProgress(boolean prog) {
+        mLogin.setEnabled(!prog);
+        mGuest.setEnabled(!prog);
+        mUser.setEnabled(!prog);
+        mPass.setEnabled(!prog);
+    }
 
-        creds.put(Constants.KEY_EMAIL, mUser.getText());
-        creds.put(Constants.KEY_PASSWORD, mPass.getText());
+    private void showUserInfo() {
+        mName.setText(mLoggedInUser.getmName());
+        mPhone.setText(mLoggedInUser.getmPhone());
+        mCity.setText(mLoggedInUser.getmCity());
+        mAddress.setText(mLoggedInUser.getmAddress());
+
+        mUserInfoLayout.setVisibility(View.VISIBLE);
+        mLoginLayout.setVisibility(View.GONE);
+    }
+
+    private void showLoginScreen() {
+        mUser.setText("");
+        mPass.setText("");
+        mPrefs.removeToken();
+        mUserInfoLayout.setVisibility(View.GONE);
+        mLoginLayout.setVisibility(View.VISIBLE);
+    }
+
+    private synchronized void doLogin() {
+        setInProgress(true);
+
+        JSONObject creds = new JSONObject();
+        try {
+            creds.put(Constants.KEY_EMAIL, mUser.getText());
+            creds.put(Constants.KEY_PASSWORD, mPass.getText());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            showLoginScreen();
+            setInProgress(false);
+            return;
+        }
 
         JsonObjectRequest jReq = new JsonObjectRequest(Constants.API_AUTH_TOKEN, creds,
                 new Response.Listener<JSONObject>() {
@@ -156,10 +177,10 @@ public class LoginActivity extends Activity {
         mReqQueue.add(jReq);
     }
 
-    private synchronized void onTokenRetrieved(final String token) throws JSONException {
+    private synchronized void onTokenRetrieved(final String token) {
         setInProgress(true);
 
-        JsonObjectRequest jReq = new JsonObjectRequest(Constants.API_ABOUT_ME,null,
+        JsonObjectRequest jReq = new JsonObjectRequest(Constants.API_ABOUT_ME, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -182,41 +203,16 @@ public class LoginActivity extends Activity {
                         showLoginScreen();
                     }
                 }
-        ){
+        ) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String, String>  params = new HashMap<String, String>();
-                params.put(Constants.KEY_AUTH_HEADER,"JWT "+ token);
+                Map<String, String> params = new HashMap<String, String>();
+                params.put(Constants.KEY_AUTH_HEADER, "JWT " + token);
 
                 return params;
             }
         };
 
         mReqQueue.add(jReq);
-    }
-
-    private void setInProgress(boolean prog){
-        mLogin.setEnabled(!prog);
-        mGuest.setEnabled(!prog);
-        mUser.setEnabled(!prog);
-        mPass.setEnabled(!prog);
-    }
-
-    private void showUserInfo(){
-        mName.setText(mLoggedInUser.getmName());
-        mPhone.setText(mLoggedInUser.getmPhone());
-        mCity.setText(mLoggedInUser.getmCity());
-        mAddress.setText(mLoggedInUser.getmAddress());
-
-        mUserInfoLayout.setVisibility(View.VISIBLE);
-        mLoginLayout.setVisibility(View.GONE);
-    }
-
-    private void showLoginScreen(){
-        mUser.setText("");
-        mPass.setText("");
-        mPrefs.removeToken();
-        mUserInfoLayout.setVisibility(View.GONE);
-        mLoginLayout.setVisibility(View.VISIBLE);
     }
 }
