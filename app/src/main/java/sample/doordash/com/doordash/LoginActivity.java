@@ -165,7 +165,7 @@ public class LoginActivity extends Activity {
                     public void onResponse(JSONObject response) {
                         setInProgress(false);
                         try {
-                            Toast.makeText(getApplicationContext(), "Login Success: " + response.getString("first_name"), Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "Login Success: " + response.getString("first_name"), Toast.LENGTH_SHORT).show();
                             mLoggedInUser = User.CreateFromJSONObject(response);
                             showUserInfo();
                         } catch (JSONException e) {
@@ -177,7 +177,7 @@ public class LoginActivity extends Activity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Me failure: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "Me failure: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                         setInProgress(false);
                         showLoginScreen();
                     }
