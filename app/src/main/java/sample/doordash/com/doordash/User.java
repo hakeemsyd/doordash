@@ -16,8 +16,8 @@ public class User {
     public static User CreateFromJSONObject(JSONObject obj) throws JSONException {
         String name = obj.getString(Constants.KEY_FIRST_NAME) + " " + obj.getString(Constants.KEY_LAST_NAME);
         String phone = obj.getString(Constants.KEY_PHONE);
-        String city = obj.getJSONObject(Constants.KEY_ADDRESS).getString(Constants.KEY_CITY);
-        String address = obj.getJSONObject(Constants.KEY_ADDRESS).getString(Constants.KEY_STREET_ADDRESS);
+        String city = obj.getJSONObject(Constants.KEY_DEFAULT_ADDRESS).getString(Constants.KEY_CITY);
+        String address = obj.getJSONObject(Constants.KEY_DEFAULT_ADDRESS).getString(Constants.KEY_STREET_ADDRESS);
         return new User(name, phone, city, address);
     }
 
