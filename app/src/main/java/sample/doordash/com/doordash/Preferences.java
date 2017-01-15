@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
  */
 
 public class Preferences {
+    private static final String KEY_TOKEN = "token";
     private SharedPreferences mPrefs;
 
     public Preferences(Context context){
@@ -21,13 +22,29 @@ public class Preferences {
     }
 
     public boolean isFavourite(String id){
-        boolean f = mPrefs.getBoolean(id, false);
-       return f;
+        return mPrefs.getBoolean(id, false);
     }
 
     public void removeFavourite(String id){
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.remove(id);
         editor.commit();
+    }
+
+    public void addToken(String token){
+        SharedPreferences.Editor editor = mPrefs.edit();
+        editor.putString(KEY_TOKEN, token);
+        editor.commit();
+    }
+
+    public void removeToken(){
+        SharedPreferences.Editor editor = mPrefs.edit();
+        editor.remove(KEY_TOKEN);
+        editor.commit();
+    }
+
+    public String getToken(){
+        String tok = mPrefs.getString(KEY_TOKEN, "");
+        return tok ;
     }
 }
