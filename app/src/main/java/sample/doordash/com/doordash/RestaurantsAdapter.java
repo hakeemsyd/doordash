@@ -5,8 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageButton;
-import android.widget.TextView;
 
 import java.util.List;
 
@@ -49,7 +47,7 @@ public class RestaurantsAdapter extends BaseAdapter{
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if(convertView == null){
             convertView = inflater.inflate(R.layout.restaurant_list_item,null);
-            RestaurantViewHolder viewHolder = new RestaurantViewHolder(convertView, mItems.get(position));
+            RestaurantViewHolder viewHolder = new RestaurantViewHolder(mContext, convertView, mItems.get(position));
             convertView.setTag(viewHolder);
         }else{
             RestaurantViewHolder viewHolder = (RestaurantViewHolder) convertView.getTag();

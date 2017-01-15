@@ -1,5 +1,6 @@
 package sample.doordash.com.doordash;
 
+import android.content.Context;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -15,25 +16,33 @@ public class RestaurantViewHolder {
     private View mView;
     private ToggleButton mFav;
     private TextView mName;
+    private Preferences mPrefs;
 
-    public RestaurantViewHolder(View view, Restaurant restaurant){
+    public RestaurantViewHolder(Context context, View view, Restaurant restaurant){
+        mPrefs = new Preferences(context);
         mView = view;
         mRestaurant = restaurant;
         mName = (TextView) mView.findViewById(R.id.name);
         mFav = (ToggleButton) mView.findViewById(R.id.favorite);
-
-        mName.setText(restaurant.getName());
-
+        update();
         mFav.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //add to favorites
+                if(mFav.isChecked()){
+                    mPrefs.addFavourite(mRestaurant.getName());
+                }else{
+                    mPrefs.removeFavourite(mRestaurant.getName());
+                }
             }
         });
     }
 
     public void update(Restaurant restaurant){
         mRestaurant = restaurant;
+    }
+
+    private void update(){
         mName.setText(mRestaurant.getName());
+        mFav.setChecked(mPrefs.isFavourite(mRestaurant.getName()));
     }
 }

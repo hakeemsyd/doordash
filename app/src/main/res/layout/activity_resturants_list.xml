@@ -16,9 +16,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"></ListView>
     <ProgressBar
-        android:id="@+id/empty"
+        android:id="@+id/progress"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:gravity="center"
         />
+    <TextView
+        android:id="@+id/empty_text"
+        android:text="@string/empty_list"
+        android:visibility="gone"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:gravity="center"/>
 </LinearLayout>
