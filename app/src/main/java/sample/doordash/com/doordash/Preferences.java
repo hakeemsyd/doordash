@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
  */
 
 public class Preferences {
+    private static final String KEY_TOKEN = "token";
     private SharedPreferences mPrefs;
 
     public Preferences(Context context){
@@ -29,5 +30,15 @@ public class Preferences {
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.remove(id);
         editor.commit();
+    }
+
+    public void addToken(String token){
+        SharedPreferences.Editor editor = mPrefs.edit();
+        editor.putString(KEY_TOKEN, token);
+        editor.commit();
+    }
+
+    public String getToken(){
+        return mPrefs.getString(KEY_TOKEN, "");
     }
 }
