@@ -1,5 +1,8 @@
 package sample.doordash.com.doordash;
 
+import android.app.DialogFragment;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -7,6 +10,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -26,19 +30,21 @@ import java.util.List;
 public class RestaurantsListActivity extends AppCompatActivity {
 
     private RestaurantsAdapter mAdapter;
-    private RequestQueue mReqQueue;
     private ListView mListView;
     private Preferences mPrefs;
     private ProgressBar mProgress;
     private TextView mEmpty;
     private boolean mFavouritesMode;
-    private MenuItem mMenu;
+
+    private String mLong = "-122.139956";
+    private String mLat ="37.422740";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_resturants_list);
         mFavouritesMode = false;
-        mReqQueue = Volley.newRequestQueue(this);
         mPrefs = new Preferences(this);
 
         mListView = (ListView) findViewById(R.id.list);
@@ -48,48 +54,78 @@ public class RestaurantsListActivity extends AppCompatActivity {
 
         mAdapter = new RestaurantsAdapter(this, new ArrayList<Restaurant>());
         mListView.setAdapter(mAdapter);
-    }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                showDialog(mAdapter.getItem(position).getId());
+            }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        refrestList();
+        refreshList();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
-        mMenu = menu.getItem(0);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if(item.getItemId() == R.id.view_favourites){
-            if(mFavouritesMode){
+        if (item.getItemId() == R.id.view_favourites) {
+            if (mFavouritesMode) {
                 mFavouritesMode = false;
                 item.setIcon(R.drawable.ic_favorite_border_white_36dp);
-            }else{
+            } else {
                 mFavouritesMode = true;
                 item.setIcon(R.drawable.ic_favorite_white_36dp);
             }
-
-            refrestList();
-            return true;
-        }else {
+            refreshList();
+        } else {
             return super.onOptionsItemSelected(item);
         }
+
+        return true;
     }
 
-    synchronized void refrestList() {
+    private void updateListView(final List<Restaurant> restaurants) {
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (restaurants.size() == 0) {
+                    mProgress.setVisibility(View.GONE);
+                    mEmpty.setVisibility(View.VISIBLE);
+                } else {
+                    mEmpty.setVisibility(View.GONE);
+                    mAdapter.update(restaurants);
+                }
+            }
+        });
+    }
+
+    void showDialog(long id){
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+
+        Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+        if (prev != null) {
+            ft.remove(prev);
+        }
+        ft.addToBackStack(null);
+
+        DialogFragment newFragment = RestaurantDialogFragment.newInstance(id);
+        newFragment.show(ft, "dialog");
+    }
+
+    synchronized void refreshList() {
+        RequestQueue reqQueue = Volley.newRequestQueue(this);
         mAdapter.clear();
-        String q = "?lat=" + 37.422740 + "&lng=" + -122.139956;
+        String q = "?lat=" + mLat + "&lng=" + mLong;
         JsonArrayRequest request = new JsonArrayRequest(Constants.API_RESTURANT + q,
                 new Response.Listener<JSONArray>() {
                     @Override
@@ -97,16 +133,16 @@ public class RestaurantsListActivity extends AppCompatActivity {
                         Log.i("", "Response: " + response.length());
 
                         List<Restaurant> restaurants = new ArrayList<>();
-                        for(int i = 0; i < response.length(); i++){
+                        for (int i = 0; i < response.length(); i++) {
                             try {
                                 Restaurant r = Restaurant.CreateFromJSONObject(response.getJSONObject(i));
-                                if(!mFavouritesMode) {
+                                if (!mFavouritesMode) {
                                     restaurants.add(r);
-                                }else if(mFavouritesMode && mPrefs.isFavourite(String.valueOf(r.getId()))){
+                                } else if (mFavouritesMode && mPrefs.isFavourite(String.valueOf(r.getId()))) {
                                     restaurants.add(r);
                                 }
                             } catch (JSONException e) {
-                                continue;
+                                e.printStackTrace();
                             }
                         }
 
@@ -119,21 +155,6 @@ public class RestaurantsListActivity extends AppCompatActivity {
                 Log.i("", "Error: " + error.getMessage());
             }
         });
-        mReqQueue.add(request);
-    }
-
-    private void updateListView(final List<Restaurant> restaurants){
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if(restaurants.size() == 0){
-                    mProgress.setVisibility(View.GONE);
-                    mEmpty.setVisibility(View.VISIBLE);
-                }else {
-                    mEmpty.setVisibility(View.GONE);
-                    mAdapter.update(restaurants);
-                }
-            }
-        });
+        reqQueue.add(request);
     }
 }
