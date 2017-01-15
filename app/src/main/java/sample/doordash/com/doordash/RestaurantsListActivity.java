@@ -12,8 +12,7 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
-
+import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +25,8 @@ public class RestaurantsListActivity extends ListActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mReqQueue = Volley.newRequestQueue(this);
+        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
+        getListView().setAdapter(mAdapter);
     }
 
     @Override
@@ -36,21 +37,28 @@ public class RestaurantsListActivity extends ListActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        mAdapter.clear();
         refrestList();
     }
 
     void refrestList() {
-        List<String> l = new ArrayList<>();
-        l.add("restaurant 1");
-        l.add("restaurant 2");
-
-        String q = "?lat=" + 37.386052 + "&lng=" + -122.083851;
+        String q = "?lat=" + 37.422740 + "&lng=" + -122.139956;
         JsonArrayRequest request = new JsonArrayRequest(Constants.API_RESTURANT + q,
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
                         Log.i("", "Response: " + response.length());
 
+                        List<String> restaurants = new ArrayList<String>();
+                        for(int i = 0; i < response.length(); i++){
+                            try {
+                                mAdapter.add(response.getJSONObject(i).getString("name"));
+                            } catch (JSONException e) {
+                                continue;
+                            }
+                        }
+
+                        updateListView();
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -59,5 +67,14 @@ public class RestaurantsListActivity extends ListActivity {
             }
         });
         mReqQueue.add(request);
+    }
+
+    private void updateListView(){
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mAdapter.notifyDataSetChanged();
+            }
+        });
     }
 }

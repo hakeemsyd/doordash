@@ -10,5 +10,5 @@ public final class Constants {
     }
 
     public static final String API_ROOT = "https://api.doordash.com";
-    public static final String API_RESTURANT = API_ROOT + "/v2/resturant/";
+    public static final String API_RESTURANT = API_ROOT + "/v2/restaurant/";
 }
