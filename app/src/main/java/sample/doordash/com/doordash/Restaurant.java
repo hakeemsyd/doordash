@@ -8,13 +8,25 @@ import org.json.JSONObject;
  */
 
 public class Restaurant {
+    private long mId;
     private String mName;
 
-    public Restaurant(String name){
-        mName = name;
+    public static Restaurant CreateFromJSONObject(JSONObject obj) throws JSONException{
+        long id = obj.getLong(Constants.KEY_JSON_RESTAURANT_ID);
+        String name = obj.getString(Constants.KEY_JSON_RESTAURANT_NAME);
+        return new Restaurant(id, name);
+    }
+
+    public Restaurant(long id, String name){
+        this.mId = id;
+        this.mName = name;
     }
 
     public String getName(){
         return mName;
+    }
+
+    public long getId(){
+        return mId;
     }
 }

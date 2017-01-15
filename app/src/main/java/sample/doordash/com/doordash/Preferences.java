@@ -14,20 +14,20 @@ public class Preferences {
         mPrefs = context.getSharedPreferences(context.getString(R.string.preference_file_key), Context.MODE_PRIVATE);
     }
 
-    public void addFavourite(String name){
+    public void addFavourite(String id){
         SharedPreferences.Editor editor = mPrefs.edit();
-        editor.putBoolean(name,true);
+        editor.putBoolean(id,true);
         editor.commit();
     }
 
-    public boolean isFavourite(String name){
-        boolean f = mPrefs.getBoolean(name, false);
+    public boolean isFavourite(String id){
+        boolean f = mPrefs.getBoolean(id, false);
        return f;
     }
 
-    public void removeFavourite(String name){
+    public void removeFavourite(String id){
         SharedPreferences.Editor editor = mPrefs.edit();
-        editor.remove(name);
+        editor.remove(id);
         editor.commit();
     }
 }
