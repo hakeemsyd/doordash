@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -18,6 +19,9 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Hakeem on 1/15/17.
@@ -37,6 +41,7 @@ public class LoginActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         mReqQueue = Volley.newRequestQueue(this);
+        mPrefs = new Preferences(this);
 
         mLogin = (Button) findViewById(R.id.login);
         mGuest = (Button) findViewById(R.id.guest_user);
@@ -64,7 +69,8 @@ public class LoginActivity extends Activity {
         });
     }
 
-    private void doLogin() throws JSONException {
+    private synchronized void doLogin() throws JSONException {
+        setInProgress(true);
         JSONObject creds = new JSONObject();
 
         creds.put(Constants.KEY_EMAIL, mUser.getText());
@@ -74,9 +80,10 @@ public class LoginActivity extends Activity {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-
+                        setInProgress(false);
                         try {
-                            String token = response.getString(Constants.KEY_TOKEN)
+                            String token = response.getString(Constants.KEY_TOKEN);
+                            onTokenRetrieved(token);
                             Toast.makeText(getApplicationContext(), "Login Success: " + token, Toast.LENGTH_LONG).show();
                             mPrefs.addToken(token);
                         } catch (JSONException e) {
@@ -88,9 +95,53 @@ public class LoginActivity extends Activity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(getApplicationContext(), "Login failure: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                        setInProgress(false);
                     }
                 });
 
         mReqQueue.add(jReq);
+    }
+
+    private void onTokenRetrieved(final String token) throws JSONException {
+        setInProgress(true);
+
+        JsonObjectRequest jReq = new JsonObjectRequest(Constants.API_ABOUT_ME,null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        setInProgress(false);
+                        try {
+                            Toast.makeText(getApplicationContext(), "Login Success: " + response.getString("first_name"), Toast.LENGTH_LONG).show();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Me failure: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                        setInProgress(false);
+                    }
+                }
+        ){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put(Constants.KEY_AUTH_HEADER,"JWT "+ token);
+
+                return params;
+            }
+        };
+
+        mReqQueue.add(jReq);
+    }
+
+    private void setInProgress(boolean prog){
+        mLogin.setEnabled(!prog);
+        mGuest.setEnabled(!prog);
+        mUser.setEnabled(!prog);
+        mPass.setEnabled(!prog);
     }
 }
