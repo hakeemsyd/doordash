@@ -1,9 +1,9 @@
 package sample.doordash.com.doordash;
 
-import android.app.ListActivity;
+import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -16,17 +16,23 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RestaurantsListActivity extends ListActivity {
+public class RestaurantsListActivity extends Activity {
 
-    private ArrayAdapter<String> mAdapter;
+    private RestaurantsAdapter mAdapter;
     private RequestQueue mReqQueue;
+    private ListView mListView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_resturants_list);
         mReqQueue = Volley.newRequestQueue(this);
-        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
-        getListView().setAdapter(mAdapter);
+
+        mListView = (ListView) findViewById(R.id.list);
+        mListView.setEmptyView(findViewById(R.id.empty));
+
+        mAdapter = new RestaurantsAdapter(this, new ArrayList<Restaurant>());
+        mListView.setAdapter(mAdapter);
     }
 
     @Override
@@ -37,7 +43,6 @@ public class RestaurantsListActivity extends ListActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mAdapter.clear();
         refrestList();
     }
 
@@ -49,16 +54,16 @@ public class RestaurantsListActivity extends ListActivity {
                     public void onResponse(JSONArray response) {
                         Log.i("", "Response: " + response.length());
 
-                        List<String> restaurants = new ArrayList<String>();
+                        List<Restaurant> restaurants = new ArrayList<>();
                         for(int i = 0; i < response.length(); i++){
                             try {
-                                mAdapter.add(response.getJSONObject(i).getString("name"));
+                                restaurants.add(new Restaurant(response.getJSONObject(i)));
                             } catch (JSONException e) {
                                 continue;
                             }
                         }
 
-                        updateListView();
+                        updateListView(restaurants);
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -69,11 +74,11 @@ public class RestaurantsListActivity extends ListActivity {
         mReqQueue.add(request);
     }
 
-    private void updateListView(){
+    private void updateListView(final List<Restaurant> restaurants){
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mAdapter.notifyDataSetChanged();
+                mAdapter.update(restaurants);
             }
         });
     }

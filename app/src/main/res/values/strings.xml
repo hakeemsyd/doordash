@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">doordash</string>
+    <string name="empty_or_loading">Loading restaurants</string>
 </resources>
