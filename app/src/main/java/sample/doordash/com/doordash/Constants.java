@@ -31,5 +31,6 @@ public final class Constants {
     public static final String KEY_RESTAURANT_PRINTABLE_ADDRESS = "printable_address";
 
     public static final String KEY_AUTH_HEADER= "Authorization";
-
+    public static final double DEFAULT_LAT =  37.422740;
+    public static final double DEFAULT_LNG =  -122.139956;
 }
