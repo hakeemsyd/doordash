@@ -38,12 +38,8 @@ public class RestaurantsAdapter extends BaseAdapter{
     }
 
     public void update(List<Restaurant> items){
-        this.mItems = items;
-        notifyDataSetChanged();
-    }
-
-    public void clear(){
         this.mItems.clear();
+        this.mItems.addAll(items);
         notifyDataSetChanged();
     }
 

@@ -11,18 +11,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.Map;
+import rx.Observer;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by Hakeem on 1/15/17.
@@ -30,21 +25,20 @@ import java.util.Map;
 
 public class LoginActivity extends Activity {
 
-    private RequestQueue mReqQueue;
     private Button mLogin;
     private Button mGuest;
     private EditText mUser;
     private EditText mPass;
     private Preferences mPrefs;
-    private User mLoggedInUser;
     private TextView mName;
     private TextView mPhone;
     private TextView mAddress;
-    private TextView mCity;
     private Button mLogout;
     private Button mContinue;
     private LinearLayout mLoginLayout;
     private LinearLayout mUserInfoLayout;
+
+    private List<Subscription> mSubscriptions = new ArrayList<>();
 
     private final View.OnClickListener mLoginButtonClickListener = new View.OnClickListener() {
         @Override
@@ -73,9 +67,7 @@ public class LoginActivity extends Activity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        mReqQueue = Volley.newRequestQueue(this);
         mPrefs = new Preferences(this);
-        mLoggedInUser = new User();
 
         mLogin = (Button) findViewById(R.id.login);
         mGuest = (Button) findViewById(R.id.guest_user);
@@ -88,7 +80,6 @@ public class LoginActivity extends Activity {
         mName = (TextView) findViewById(R.id.userinfo_name);
         mPhone = (TextView) findViewById(R.id.userinfo_phone);
         mAddress = (TextView) findViewById(R.id.userinfo_address);
-        mCity = (TextView) findViewById(R.id.userinfo_city);
 
         mLoginLayout = (LinearLayout) findViewById(R.id.login_prompt_layout);
         mUserInfoLayout = (LinearLayout) findViewById(R.id.user_info_layout);
@@ -97,17 +88,27 @@ public class LoginActivity extends Activity {
         mGuest.setOnClickListener(mGuestButtonListener);
         mLogout.setOnClickListener(mLogoutButtonClickListener);
         mContinue.setOnClickListener(mGuestButtonListener);
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         if (!mPrefs.getToken().isEmpty()) {
-            showUserInfo();
             onTokenRetrieved(mPrefs.getToken());
         } else {
             showLoginScreen();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if(mSubscriptions != null){
+            for(Subscription s: mSubscriptions){
+                s.unsubscribe();
+            }
+        }
+        super.onDestroy();
     }
 
     private void setInProgress(boolean prog) {
@@ -117,11 +118,10 @@ public class LoginActivity extends Activity {
         mPass.setEnabled(!prog);
     }
 
-    private void showUserInfo() {
-        mName.setText(mLoggedInUser.getmName());
-        mPhone.setText(mLoggedInUser.getmPhone());
-        mCity.setText(mLoggedInUser.getmCity());
-        mAddress.setText(mLoggedInUser.getmAddress());
+    private void showUserInfo(User user) {
+        mName.setText(user.mFirstName + " " + user.mLastName);
+        mPhone.setText(user.mPhone);
+        mAddress.setText(user.mAddress.mPrintableAddress);
 
         mUserInfoLayout.setVisibility(View.VISIBLE);
         mLoginLayout.setVisibility(View.GONE);
@@ -135,84 +135,61 @@ public class LoginActivity extends Activity {
         mLoginLayout.setVisibility(View.VISIBLE);
     }
 
-    private synchronized void doLogin() {
+    private void doLogin(){
         setInProgress(true);
-
-        JSONObject creds = new JSONObject();
-        try {
-            creds.put(Constants.KEY_EMAIL, mUser.getText());
-            creds.put(Constants.KEY_PASSWORD, mPass.getText());
-        } catch (JSONException e) {
-            e.printStackTrace();
-            showLoginScreen();
-            setInProgress(false);
-            return;
-        }
-
-        JsonObjectRequest jReq = new JsonObjectRequest(Constants.API_AUTH_TOKEN, creds,
-                new Response.Listener<JSONObject>() {
+        Subscription sub = DoorDashClient.getInstance().getAuthToken(new Credential(mUser.getText().toString(), mPass.getText().toString()))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<AuthToken>() {
                     @Override
-                    public void onResponse(JSONObject response) {
-                        showLoginScreen();
+                    public void onCompleted() {
                         setInProgress(false);
-                        try {
-                            String token = response.getString(Constants.KEY_TOKEN);
-                            onTokenRetrieved(token);
-                            Toast.makeText(getApplicationContext(), "Login Success: " + token, Toast.LENGTH_LONG).show();
-                            mPrefs.addToken(token);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
                     }
-                },
-                new Response.ErrorListener() {
+
                     @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Login failure: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                    public void onError(Throwable e) {
                         setInProgress(false);
                         showLoginScreen();
+                        Toast.makeText(getApplicationContext(), "Login failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onNext(AuthToken authToken) {
+                        Toast.makeText(getApplicationContext(), "Login Success: " + authToken.mToken, Toast.LENGTH_LONG).show();
+                        mPrefs.addToken(authToken.mToken);
+                        onTokenRetrieved(authToken.mToken);
                     }
                 });
 
-        mReqQueue.add(jReq);
+        mSubscriptions.add(sub);
     }
 
-    private synchronized void onTokenRetrieved(final String token) {
-        setInProgress(true);
+    private void onTokenRetrieved(final String token){
 
-        JsonObjectRequest jReq = new JsonObjectRequest(Constants.API_ABOUT_ME, null,
-                new Response.Listener<JSONObject>() {
+        Subscription sub = DoorDashClient.getInstance()
+                .getUserInfo(token)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<User>() {
                     @Override
-                    public void onResponse(JSONObject response) {
-                        setInProgress(false);
-                        try {
-                            Toast.makeText(getApplicationContext(), "Login Success: " + response.getString("first_name"), Toast.LENGTH_SHORT).show();
-                            mLoggedInUser = User.CreateFromJSONObject(response);
-                            showUserInfo();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                    public void onCompleted() {
 
                     }
-                },
-                new Response.ErrorListener() {
+
                     @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Me failure: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    public void onError(Throwable e) {
                         setInProgress(false);
+                        mPrefs.removeToken();
                         showLoginScreen();
+                        Toast.makeText(getApplicationContext(), "Failed to get user info: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
-                }
-        ) {
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String, String> params = new HashMap<String, String>();
-                params.put(Constants.KEY_AUTH_HEADER, "JWT " + token);
 
-                return params;
-            }
-        };
-
-        mReqQueue.add(jReq);
+                    @Override
+                    public void onNext(User user) {
+                        setInProgress(false);
+                        Toast.makeText(getApplicationContext(), "Login Success: " + user.mFirstName, Toast.LENGTH_SHORT).show();
+                        showUserInfo(user);
+                    }
+                });
     }
 }

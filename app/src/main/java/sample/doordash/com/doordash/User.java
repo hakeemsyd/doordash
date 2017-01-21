@@ -1,5 +1,7 @@
 package sample.doordash.com.doordash;
 
+import com.google.gson.annotations.SerializedName;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -8,46 +10,23 @@ import org.json.JSONObject;
  */
 
 public class User {
-    private String mName;
-    private String mPhone;
-    private String mCity;
-    private String mAddress;
+    @SerializedName(Constants.KEY_FIRST_NAME)
+    public final String mFirstName;
+    @SerializedName(Constants.KEY_LAST_NAME)
+    public final String mLastName;
+    @SerializedName(Constants.KEY_PHONE)
+    public final String mPhone;
+    @SerializedName(Constants.KEY_CITY)
+    public final String mCity;
+    @SerializedName(Constants.KEY_DEFAULT_ADDRESS)
+    public final Address mAddress;
 
-    public static User CreateFromJSONObject(JSONObject obj) throws JSONException {
-        String name = obj.getString(Constants.KEY_FIRST_NAME) + " " + obj.getString(Constants.KEY_LAST_NAME);
-        String phone = obj.getString(Constants.KEY_PHONE);
-        String city = obj.getJSONObject(Constants.KEY_DEFAULT_ADDRESS).getString(Constants.KEY_CITY);
-        String address = obj.getJSONObject(Constants.KEY_DEFAULT_ADDRESS).getString(Constants.KEY_STREET_ADDRESS);
-        return new User(name, phone, city, address);
-    }
 
-    public User() {
-        mName = "";
-        mPhone = "";
-        mCity = "";
-        mAddress = "";
-    }
-
-    public User(String name, String phone, String city, String address) {
-        this.mName = name;
+    public User(String fName, String lName, String phone, String city, Address address) {
+        this.mFirstName = fName;
+        this.mLastName = lName;
         this.mPhone = phone;
         this.mCity = city;
         this.mAddress = address;
-    }
-
-    public String getmName() {
-        return mName;
-    }
-
-    public String getmPhone() {
-        return mPhone;
-    }
-
-    public String getmCity() {
-        return mCity;
-    }
-
-    public String getmAddress() {
-        return mAddress;
     }
 }

@@ -5,7 +5,6 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -18,25 +17,19 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.Volley;
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.model.LatLng;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import rx.Observer;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class RestaurantsListActivity extends AppCompatActivity {
 
@@ -48,6 +41,8 @@ public class RestaurantsListActivity extends AppCompatActivity {
     private TextView mEmpty;
     private boolean mFavouritesMode;
     private LatLng mLoc;
+
+    private Subscription mSubscription;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +63,7 @@ public class RestaurantsListActivity extends AppCompatActivity {
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                showDialog(mAdapter.getItem(position).getId());
+                showDialog(mAdapter.getItem(position).mId);
             }
         });
     }
@@ -106,19 +101,23 @@ public class RestaurantsListActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    protected void onDestroy() {
+        if (mSubscription != null && !mSubscription.isUnsubscribed()) {
+            mSubscription.unsubscribe();
+        }
+        super.onDestroy();
+    }
+
     private void updateListView(final List<Restaurant> restaurants) {
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (restaurants.size() == 0) {
-                    mProgress.setVisibility(View.GONE);
-                    mEmpty.setVisibility(View.VISIBLE);
-                } else {
-                    mEmpty.setVisibility(View.GONE);
-                    mAdapter.update(restaurants);
-                }
-            }
-        });
+        if (restaurants.size() == 0) {
+            mProgress.setVisibility(View.GONE);
+            mEmpty.setVisibility(View.VISIBLE);
+        } else {
+            mEmpty.setVisibility(View.GONE);
+            mAdapter.update(restaurants);
+        }
+
     }
 
     private void showDialog(long id) {
@@ -161,39 +160,28 @@ public class RestaurantsListActivity extends AppCompatActivity {
         }
     }
 
-    synchronized void refreshList() {
-        RequestQueue reqQueue = Volley.newRequestQueue(this);
-        mAdapter.clear();
-        String q = "?lat=" + mLoc.latitude + "&lng=" + mLoc.longitude;
-        JsonArrayRequest request = new JsonArrayRequest(Constants.API_RESTURANT + q,
-                new Response.Listener<JSONArray>() {
+    void refreshList() {
+        mSubscription = DoorDashClient.getInstance()
+                .getRestaurants(mLoc.latitude, mLoc.longitude)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<List<Restaurant>>() {
                     @Override
-                    public void onResponse(JSONArray response) {
-                        Log.i("", "Response: " + response.length());
-
-                        List<Restaurant> restaurants = new ArrayList<>();
-                        for (int i = 0; i < response.length(); i++) {
-                            try {
-                                Restaurant r = Restaurant.CreateFromJSONObject(response.getJSONObject(i));
-                                if (!mFavouritesMode) {
-                                    restaurants.add(r);
-                                } else if (mFavouritesMode && mPrefs.isFavourite(String.valueOf(r.getId()))) {
-                                    restaurants.add(r);
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        updateListView(restaurants);
-
+                    public void onCompleted() {
+                        Log.d("", "In onCompleted()");
                     }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.i("", "Error: " + error.getMessage());
-            }
-        });
-        reqQueue.add(request);
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                        Log.d("", "In onError()");
+                    }
+
+                    @Override
+                    public void onNext(List<Restaurant> items) {
+                        Log.d("", "In onNext()");
+                        updateListView(items);
+                    }
+                });
     }
 }
