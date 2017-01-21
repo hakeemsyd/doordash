@@ -14,7 +14,7 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBRpfIMvCaYxHc55p9Vwfz-hQQ-Dsca2ok"/>
 
-        <activity android:name=".LoginActivity"
+        <activity android:name=".ui.LoginActivity"
             android:screenOrientation="portrait"
             android:theme="@android:style/Theme.Light.NoTitleBar.Fullscreen">
             <intent-filter>
@@ -23,7 +23,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".RestaurantsListActivity">
+        <activity android:name=".ui.RestaurantsListActivity">
         </activity>
     </application>
 

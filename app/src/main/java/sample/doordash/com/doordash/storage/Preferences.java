@@ -1,7 +1,9 @@
-package sample.doordash.com.doordash;
+package sample.doordash.com.doordash.storage;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+
+import sample.doordash.com.doordash.R;
 
 /**
  * Created by Hakeem on 1/15/17.

@@ -1,4 +1,4 @@
-package sample.doordash.com.doordash;
+package sample.doordash.com.doordash.ui;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -7,6 +7,9 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
 import java.util.List;
+
+import sample.doordash.com.doordash.R;
+import sample.doordash.com.doordash.domain.Restaurant;
 
 /**
  * Created by Hakeem on 1/14/17.

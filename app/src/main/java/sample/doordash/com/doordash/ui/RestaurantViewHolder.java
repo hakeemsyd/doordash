@@ -1,9 +1,13 @@
-package sample.doordash.com.doordash;
+package sample.doordash.com.doordash.ui;
 
 import android.content.Context;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.ToggleButton;
+
+import sample.doordash.com.doordash.storage.Preferences;
+import sample.doordash.com.doordash.R;
+import sample.doordash.com.doordash.domain.Restaurant;
 
 /**
  * Created by Hakeem on 1/14/17.
