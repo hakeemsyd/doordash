@@ -1,5 +1,7 @@
 package sample.doordash.com.doordash;
 
+import com.google.gson.annotations.SerializedName;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -8,25 +10,30 @@ import org.json.JSONObject;
  */
 
 public class Restaurant {
-    private long mId;
-    private String mName;
+    @SerializedName(Constants.KEY_JSON_RESTAURANT_ID)
+    public final long mId;
 
-    public static Restaurant CreateFromJSONObject(JSONObject obj) throws JSONException{
-        long id = obj.getLong(Constants.KEY_JSON_RESTAURANT_ID);
-        String name = obj.getString(Constants.KEY_JSON_RESTAURANT_NAME);
-        return new Restaurant(id, name);
-    }
+    @SerializedName(Constants.KEY_JSON_RESTAURANT_NAME)
+    public final String mName;
 
-    public Restaurant(long id, String name){
+    @SerializedName(Constants.KEY_PHONE)
+    public final String mPhone;
+
+    @SerializedName(Constants.KEY_RESTAURANT_DISTANCE)
+    public final String mDistance;
+
+    @SerializedName(Constants.KEY_ADDRESS)
+    public Address mAddress;
+
+    @SerializedName(Constants.KEY_COVER_IMAGE_URL)
+    public final String mCoverImageSrc;
+
+    public Restaurant(long id, String name, String phone, Address address, String distance, String cover_img){
         this.mId = id;
         this.mName = name;
-    }
-
-    public String getName(){
-        return mName;
-    }
-
-    public long getId(){
-        return mId;
+        this.mPhone = phone;
+        this.mAddress = address;
+        this.mDistance = distance;
+        this.mCoverImageSrc = cover_img;
     }
 }

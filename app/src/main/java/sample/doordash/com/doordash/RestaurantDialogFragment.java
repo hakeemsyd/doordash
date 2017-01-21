@@ -1,10 +1,8 @@
 package sample.doordash.com.doordash;
 
 import android.app.DialogFragment;
-import android.media.Image;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,15 +10,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.squareup.picasso.Picasso;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import rx.Observer;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by Hakeem on 1/15/17.
@@ -31,12 +26,12 @@ public class RestaurantDialogFragment extends DialogFragment {
     private long mId;
     private TextView mRestName;
     private TextView mRestPhone;
-    private TextView mCity;
     private TextView mAddress;
     private TextView mDistance;
     private ImageView mIcon;
+    private Subscription mSubscription;
 
-    static RestaurantDialogFragment newInstance(long id){
+    static RestaurantDialogFragment newInstance(long id) {
         RestaurantDialogFragment f = new RestaurantDialogFragment();
 
         Bundle args = new Bundle();
@@ -57,7 +52,6 @@ public class RestaurantDialogFragment extends DialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.dialog_restaurant_detail, container, false);
         mRestName = (TextView) v.findViewById(R.id.resinfo_name);
-        mCity = (TextView) v.findViewById(R.id.resinfo_city);
         mAddress = (TextView) v.findViewById(R.id.resinfo_address);
         mDistance = (TextView) v.findViewById(R.id.resinfo_distance);
         mRestPhone = (TextView) v.findViewById(R.id.resinfo_phone);
@@ -71,31 +65,38 @@ public class RestaurantDialogFragment extends DialogFragment {
         update();
     }
 
-    private void update(){
-        RequestQueue reqQueue = Volley.newRequestQueue(getActivity());
-        String url = Constants.API_RESTAURANT_INFO + "/" + mId + "/";
+    @Override
+    public void onDestroy() {
+        if (mSubscription != null && !mSubscription.isUnsubscribed()) {
+            mSubscription.unsubscribe();
+        }
+        super.onDestroy();
+    }
 
-        JsonObjectRequest req = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-                    Log.i("", "Restaurant info: " + response.getString("name"));
-                    mRestName.setText("Name: " + response.getString(Constants.KEY_JSON_RESTAURANT_NAME));
-                    mRestPhone.setText("Pone: " + response.getString(Constants.KEY_PHONE));
-                    mCity.setText("City: " + response.getJSONObject(Constants.KEY_ADDRESS).getString(Constants.KEY_CITY));
-                    mAddress.setText("Address: " + response.getJSONObject(Constants.KEY_ADDRESS).getString(Constants.KEY_RESTAURANT_PRINTABLE_ADDRESS));
-                    mDistance.setText("Distance: " + response.getString(Constants.KEY_RESTAURANT_DISTANCE));
-                    Picasso.with(getActivity()).load(response.getString(Constants.KEY_COVER_IMAGE_URL)).into(mIcon);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getActivity(), "Restaurant info error:" + error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-        reqQueue.add(req);
+    public void update() {
+        mSubscription = DoorDashClient.getInstance().getRestaurant(mId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Restaurant>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(getActivity(), "Failed to load restaurant", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onNext(Restaurant restaurant) {
+                        mRestName.setText("Name: " + restaurant.mName);
+                        mRestPhone.setText("Pone: " + restaurant.mPhone);
+                        mAddress.setText("Address: " + restaurant.mAddress.mPrintableAddress);
+                        mDistance.setText("Distance: " + restaurant.mDistance);
+                        Picasso.with(getActivity()).load(restaurant.mCoverImageSrc).into(mIcon);
+
+                    }
+                });
     }
 }

@@ -28,9 +28,9 @@ public class RestaurantViewHolder {
             @Override
             public void onClick(View v) {
                 if(mFav.isChecked()){
-                    mPrefs.addFavourite(String.valueOf(mRestaurant.getId()));
+                    mPrefs.addFavourite(String.valueOf(mRestaurant.mId));
                 }else{
-                    mPrefs.removeFavourite(String.valueOf(mRestaurant.getId()));
+                    mPrefs.removeFavourite(String.valueOf(mRestaurant.mId));
                 }
             }
         });
@@ -41,7 +41,7 @@ public class RestaurantViewHolder {
     }
 
     private void update(){
-        mName.setText(mRestaurant.getName());
-        mFav.setChecked(mPrefs.isFavourite(String.valueOf(mRestaurant.getId())));
+        mName.setText(mRestaurant.mName);
+        mFav.setChecked(mPrefs.isFavourite(String.valueOf(mRestaurant.mId)));
     }
 }
