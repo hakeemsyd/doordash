@@ -1,4 +1,4 @@
-package sample.doordash.com.doordash;
+package sample.doordash.com.doordash.service;
 
 import java.util.List;
 
@@ -9,6 +9,12 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import rx.Observable;
+import sample.doordash.com.doordash.domain.MenuItem;
+import sample.doordash.com.doordash.domain.Restaurant;
+import sample.doordash.com.doordash.domain.AuthToken;
+import sample.doordash.com.doordash.domain.Credential;
+import sample.doordash.com.doordash.domain.Menu;
+import sample.doordash.com.doordash.domain.User;
 
 /**
  * Created by Hakeem on 1/20/17.

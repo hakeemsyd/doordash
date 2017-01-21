@@ -1,6 +1,8 @@
-package sample.doordash.com.doordash;
+package sample.doordash.com.doordash.domain;
 
 import com.google.gson.annotations.SerializedName;
+
+import sample.doordash.com.doordash.Constants;
 
 /**
  * Created by Hakeem on 1/21/17.

@@ -1,4 +1,4 @@
-package sample.doordash.com.doordash;
+package sample.doordash.com.doordash.service;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -10,6 +10,13 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import rx.Observable;
+import sample.doordash.com.doordash.Constants;
+import sample.doordash.com.doordash.domain.MenuItem;
+import sample.doordash.com.doordash.domain.Restaurant;
+import sample.doordash.com.doordash.domain.AuthToken;
+import sample.doordash.com.doordash.domain.Credential;
+import sample.doordash.com.doordash.domain.Menu;
+import sample.doordash.com.doordash.domain.User;
 
 /**
  * Created by Hakeem on 1/20/17.

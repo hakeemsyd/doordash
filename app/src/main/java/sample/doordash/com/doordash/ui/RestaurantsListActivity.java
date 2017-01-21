@@ -1,4 +1,4 @@
-package sample.doordash.com.doordash;
+package sample.doordash.com.doordash.ui;
 
 import android.app.DialogFragment;
 import android.app.Fragment;
@@ -30,6 +30,11 @@ import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
+import sample.doordash.com.doordash.Constants;
+import sample.doordash.com.doordash.storage.Preferences;
+import sample.doordash.com.doordash.R;
+import sample.doordash.com.doordash.domain.Restaurant;
+import sample.doordash.com.doordash.service.DoorDashClient;
 
 public class RestaurantsListActivity extends AppCompatActivity {
 

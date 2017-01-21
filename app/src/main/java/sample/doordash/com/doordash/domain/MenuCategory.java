@@ -1,4 +1,4 @@
-package sample.doordash.com.doordash;
+package sample.doordash.com.doordash.domain;
 
 import com.google.gson.annotations.SerializedName;
 

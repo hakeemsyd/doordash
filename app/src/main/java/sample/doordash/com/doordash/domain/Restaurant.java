@@ -1,11 +1,12 @@
-package sample.doordash.com.doordash;
+package sample.doordash.com.doordash.domain;
 
 import com.google.gson.annotations.SerializedName;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.List;
+
+import sample.doordash.com.doordash.Constants;
+import sample.doordash.com.doordash.domain.Address;
+import sample.doordash.com.doordash.domain.Menu;
 
 /**
  * Created by Hakeem on 1/14/17.

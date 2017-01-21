@@ -1,4 +1,4 @@
-package sample.doordash.com.doordash;
+package sample.doordash.com.doordash.ui;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -18,6 +18,12 @@ import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
+import sample.doordash.com.doordash.storage.Preferences;
+import sample.doordash.com.doordash.R;
+import sample.doordash.com.doordash.domain.AuthToken;
+import sample.doordash.com.doordash.domain.Credential;
+import sample.doordash.com.doordash.domain.User;
+import sample.doordash.com.doordash.service.DoorDashClient;
 
 /**
  * Created by Hakeem on 1/15/17.
