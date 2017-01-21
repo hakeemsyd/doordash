@@ -5,6 +5,8 @@ import com.google.gson.annotations.SerializedName;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.List;
+
 /**
  * Created by Hakeem on 1/14/17.
  */
@@ -28,12 +30,16 @@ public class Restaurant {
     @SerializedName(Constants.KEY_COVER_IMAGE_URL)
     public final String mCoverImageSrc;
 
-    public Restaurant(long id, String name, String phone, Address address, String distance, String cover_img){
+    @SerializedName("menus")
+    public final List<Menu> mMenus;
+
+    public Restaurant(long id, String name, String phone, Address address, String distance, String cover_img, List<Menu> menus){
         this.mId = id;
         this.mName = name;
         this.mPhone = phone;
         this.mAddress = address;
         this.mDistance = distance;
         this.mCoverImageSrc = cover_img;
+        this.mMenus = menus;
     }
 }
