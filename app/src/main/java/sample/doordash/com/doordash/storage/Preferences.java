@@ -17,22 +17,6 @@ public class Preferences {
         mPrefs = context.getSharedPreferences(context.getString(R.string.preference_file_key), Context.MODE_PRIVATE);
     }
 
-    public void addFavourite(String id){
-        SharedPreferences.Editor editor = mPrefs.edit();
-        editor.putBoolean(id,true);
-        editor.commit();
-    }
-
-    public boolean isFavourite(String id){
-        return mPrefs.getBoolean(id, false);
-    }
-
-    public void removeFavourite(String id){
-        SharedPreferences.Editor editor = mPrefs.edit();
-        editor.remove(id);
-        editor.commit();
-    }
-
     public void addToken(String token){
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(KEY_TOKEN, token);

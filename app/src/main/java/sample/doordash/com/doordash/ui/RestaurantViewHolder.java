@@ -5,6 +5,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import sample.doordash.com.doordash.storage.Preferences;
@@ -53,6 +54,25 @@ public class RestaurantViewHolder {
 
     private void update(){
         mName.setText(mRestaurant.mName);
-        //mFav.setChecked(mPrefs.isFavourite(String.valueOf(mRestaurant.mId)));
+        mFav.setChecked(false);
+        mStorage.isFavourite(mRestaurant)
+                .subscribeOn(Schedulers.computation())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Boolean>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        mFav.setChecked(false);
+                    }
+
+                    @Override
+                    public void onNext(Boolean fav) {
+                        mFav.setChecked(fav);
+                    }
+                });
     }
 }

@@ -52,6 +52,15 @@ public class Storage {
         });
     }
 
+    public Observable<Boolean> isFavourite(final Restaurant restaurant){
+        return makeObservable(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return isFavouriteInt(restaurant);
+            }
+        });
+    }
+
     private long addBookmarkInt(final Restaurant restaurant) {
         SQLiteDatabase db = mHelper.getWritableDatabase();
         long newRowId = db.insert(StorageDefinitions.Bookmarks.TABLE_NAME, null, restaurant.toContentValues());
@@ -65,8 +74,9 @@ public class Storage {
     }
 
     private List<Restaurant> getBookmarksInt() {
-        SQLiteDatabase db = mHelper.getWritableDatabase();
-        Cursor cursor = db.rawQuery("select * from " + StorageDefinitions.Bookmarks.TABLE_NAME, null);
+        SQLiteDatabase db = mHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("select * from "
+                + StorageDefinitions.Bookmarks.TABLE_NAME, null);
 
         try {
             List<Restaurant> values = new ArrayList<>(cursor.getCount());
@@ -81,6 +91,16 @@ public class Storage {
         } finally {
             cursor.close();
         }
+    }
+
+    private boolean isFavouriteInt(Restaurant restaurant){
+        SQLiteDatabase db = mHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + StorageDefinitions.Bookmarks.TABLE_NAME
+                + " WHERE "
+                + StorageDefinitions.Bookmarks.COLUMN_REMOTE_ID + "=" + restaurant.mId, null);
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        return exists;
     }
 
     private static <T> Observable<T> makeObservable(final Callable<T> func) {

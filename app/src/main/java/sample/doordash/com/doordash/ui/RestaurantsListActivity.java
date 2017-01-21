@@ -115,14 +115,23 @@ public class RestaurantsListActivity extends AppCompatActivity {
     }
 
     private void updateListView(final List<Restaurant> restaurants) {
+        mAdapter.update(restaurants);
         if (restaurants.size() == 0) {
             mProgress.setVisibility(View.GONE);
+            mListView.setVisibility(View.GONE);
             mEmpty.setVisibility(View.VISIBLE);
         } else {
             mEmpty.setVisibility(View.GONE);
-            mAdapter.update(restaurants);
+            mProgress.setVisibility(View.GONE);
+            mListView.setVisibility(View.VISIBLE);
         }
 
+    }
+
+    private void setInProgress(){
+        mListView.setVisibility(View.GONE);
+        mEmpty.setVisibility(View.GONE);
+        mProgress.setVisibility(View.VISIBLE);
     }
 
     private void showDialog(long id) {
@@ -166,27 +175,54 @@ public class RestaurantsListActivity extends AppCompatActivity {
     }
 
     void refreshList() {
-        mSubscription = DoorDashClient.getInstance()
-                .getRestaurants(mLoc.latitude, mLoc.longitude)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<List<Restaurant>>() {
-                    @Override
-                    public void onCompleted() {
-                        Log.d("", "In onCompleted()");
-                    }
+        if(mSubscription!= null && !mSubscription.isUnsubscribed()){
+            mSubscription.unsubscribe();
+        }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        e.printStackTrace();
-                        Log.d("", "In onError()");
-                    }
+        setInProgress();
+        if(mFavouritesMode){
+            mSubscription = mStorage.getBookmarks()
+                    .subscribeOn(Schedulers.computation())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Observer<List<Restaurant>>() {
+                        @Override
+                        public void onCompleted() {
 
-                    @Override
-                    public void onNext(List<Restaurant> items) {
-                        Log.d("", "In onNext()");
-                        updateListView(items);
-                    }
-                });
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            Log.d("", "In onError()");
+                        }
+
+                        @Override
+                        public void onNext(List<Restaurant> restaurants) {
+                            updateListView(restaurants);
+                        }
+                    });
+        }else {
+            mSubscription = DoorDashClient.getInstance()
+                    .getRestaurants(mLoc.latitude, mLoc.longitude)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Observer<List<Restaurant>>() {
+                        @Override
+                        public void onCompleted() {
+                            Log.d("", "In onCompleted()");
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            e.printStackTrace();
+                            Log.d("", "In onError()");
+                        }
+
+                        @Override
+                        public void onNext(List<Restaurant> items) {
+                            Log.d("", "In onNext()");
+                            updateListView(items);
+                        }
+                    });
+        }
     }
 }
