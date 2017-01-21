@@ -50,6 +50,7 @@ public class RestaurantViewHolder {
 
     public void update(Restaurant restaurant){
         mRestaurant = restaurant;
+        update();
     }
 
     private void update(){
