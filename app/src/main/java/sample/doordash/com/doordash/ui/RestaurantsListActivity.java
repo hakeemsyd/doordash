@@ -3,8 +3,10 @@ package sample.doordash.com.doordash.ui;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -39,6 +41,8 @@ import sample.doordash.com.doordash.storage.Storage;
 
 public class RestaurantsListActivity extends AppCompatActivity {
 
+    private static final String KEY_LOC_LATITUDE = "loc_lat";
+    private static final String KEY_LOC_LONGITUDE = "loc_long";
     private static final int PLACE_PICKER_REQUEST = 100;
     private RestaurantsAdapter mAdapter;
     private ListView mListView;
@@ -49,13 +53,45 @@ public class RestaurantsListActivity extends AppCompatActivity {
     private Subscription mSubscription;
     private Storage mStorage;
 
+    public static Intent start(Context context, long lng, long lat) {
+        Intent i = new Intent();
+        i.setClass(context, RestaurantsListActivity.class);
+        Bundle b = new Bundle();
+
+        b.putDouble(RestaurantsListActivity.KEY_LOC_LONGITUDE, lng);
+        b.putDouble(RestaurantsListActivity.KEY_LOC_LATITUDE, lat);
+
+        i.putExtras(b);
+        return i;
+    }
+
+    public static Intent start(Context context) {
+        Intent i = new Intent();
+        i.setClass(context, RestaurantsListActivity.class);
+        Bundle b = new Bundle();
+
+        b.putDouble(RestaurantsListActivity.KEY_LOC_LONGITUDE, Constants.DEFAULT_LNG);
+        b.putDouble(RestaurantsListActivity.KEY_LOC_LATITUDE, Constants.DEFAULT_LAT);
+
+        i.putExtras(b);
+        return i;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_resturants_list);
         mStorage = new Storage(this);
         mFavouritesMode = false;
-        mLoc = new LatLng(Constants.DEFAULT_LAT, Constants.DEFAULT_LNG);
+
+        if (getIntent().getExtras() != null) {
+            Bundle b = getIntent().getExtras();
+            mLoc = new LatLng(b.getDouble(KEY_LOC_LATITUDE), b.getDouble(KEY_LOC_LONGITUDE));
+        } else if (savedInstanceState != null) {
+            mLoc = new LatLng(savedInstanceState.getDouble(KEY_LOC_LATITUDE), savedInstanceState.getDouble(KEY_LOC_LONGITUDE));
+        } else {
+            mLoc = new LatLng(Constants.DEFAULT_LAT, Constants.DEFAULT_LNG);
+        }
 
         mListView = (ListView) findViewById(R.id.list);
         mProgress = (ProgressBar) findViewById(R.id.progress);
@@ -71,6 +107,13 @@ public class RestaurantsListActivity extends AppCompatActivity {
                 showDialog(mAdapter.getItem(position).mId);
             }
         });
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putDouble(KEY_LOC_LATITUDE, mLoc.latitude);
+        outState.putDouble(KEY_LOC_LONGITUDE, mLoc.longitude);
     }
 
     @Override
@@ -128,7 +171,7 @@ public class RestaurantsListActivity extends AppCompatActivity {
 
     }
 
-    private void setInProgress(){
+    private void setInProgress() {
         mListView.setVisibility(View.GONE);
         mEmpty.setVisibility(View.GONE);
         mProgress.setVisibility(View.VISIBLE);
@@ -175,12 +218,12 @@ public class RestaurantsListActivity extends AppCompatActivity {
     }
 
     void refreshList() {
-        if(mSubscription!= null && !mSubscription.isUnsubscribed()){
+        if (mSubscription != null && !mSubscription.isUnsubscribed()) {
             mSubscription.unsubscribe();
         }
 
         setInProgress();
-        if(mFavouritesMode){
+        if (mFavouritesMode) {
             mSubscription = mStorage.getBookmarks()
                     .subscribeOn(Schedulers.computation())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -200,7 +243,7 @@ public class RestaurantsListActivity extends AppCompatActivity {
                             updateListView(restaurants);
                         }
                     });
-        }else {
+        } else {
             mSubscription = DoorDashClient.getInstance()
                     .getRestaurants(mLoc.latitude, mLoc.longitude)
                     .subscribeOn(Schedulers.io())

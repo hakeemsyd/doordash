@@ -1,7 +1,6 @@
 package sample.doordash.com.doordash.ui;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
@@ -65,8 +64,7 @@ public class LoginActivity extends Activity {
     private final View.OnClickListener mGuestButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent i = new Intent(getApplicationContext(), RestaurantsListActivity.class);
-            startActivity(i);
+            startActivity(RestaurantsListActivity.start(getApplicationContext()));
         }
     };
 
