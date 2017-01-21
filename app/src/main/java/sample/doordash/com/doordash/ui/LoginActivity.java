@@ -24,6 +24,7 @@ import sample.doordash.com.doordash.domain.AuthToken;
 import sample.doordash.com.doordash.domain.Credential;
 import sample.doordash.com.doordash.domain.User;
 import sample.doordash.com.doordash.service.DoorDashClient;
+import sample.doordash.com.doordash.storage.Storage;
 
 /**
  * Created by Hakeem on 1/15/17.

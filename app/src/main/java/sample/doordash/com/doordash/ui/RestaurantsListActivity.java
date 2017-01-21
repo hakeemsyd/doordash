@@ -35,26 +35,26 @@ import sample.doordash.com.doordash.storage.Preferences;
 import sample.doordash.com.doordash.R;
 import sample.doordash.com.doordash.domain.Restaurant;
 import sample.doordash.com.doordash.service.DoorDashClient;
+import sample.doordash.com.doordash.storage.Storage;
 
 public class RestaurantsListActivity extends AppCompatActivity {
 
     private static final int PLACE_PICKER_REQUEST = 100;
     private RestaurantsAdapter mAdapter;
     private ListView mListView;
-    private Preferences mPrefs;
     private ProgressBar mProgress;
     private TextView mEmpty;
     private boolean mFavouritesMode;
     private LatLng mLoc;
-
     private Subscription mSubscription;
+    private Storage mStorage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_resturants_list);
+        mStorage = new Storage(this);
         mFavouritesMode = false;
-        mPrefs = new Preferences(this);
         mLoc = new LatLng(Constants.DEFAULT_LAT, Constants.DEFAULT_LNG);
 
         mListView = (ListView) findViewById(R.id.list);
