@@ -26,4 +26,10 @@ public interface DoorDashService {
 
     @GET("/v2/consumer/me/")
     Observable<User> getUser(@Header("Authorization") String authHeader);
+
+    @GET("/v2/restaurant/{restaurant_id}/menu/{menu_id}/")
+    Observable<Menu> getMenu(@Path("restaurant_id") long rId, @Path("menu_id") long mId);
+
+    @GET("/v2/restaurant/{restaurant_id}/item/{item_id}/")
+    Observable<MenuItem> getMenuItem(@Path("restaurant_id") long rId, @Path("item_id") long iId);
 }

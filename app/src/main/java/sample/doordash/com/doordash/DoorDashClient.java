@@ -51,4 +51,12 @@ public class DoorDashClient {
     public Observable<User> getUserInfo(String token){
         return mService.getUser("JWT " + token);
     }
+
+    public Observable<Menu> getMenu(long restaurantId, long menuId){
+        return mService.getMenu(restaurantId, menuId);
+    }
+
+    public Observable<MenuItem> getMenuItem(long restaurantId, long itemId){
+        return mService.getMenuItem(restaurantId, itemId);
+    }
 }
