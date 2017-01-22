@@ -5,6 +5,11 @@
     android:padding="12dp"
     android:layout_height="wrap_content">
 
+    <ImageView
+        android:id="@+id/rest_thumbnail"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        />
     <TextView
         android:id="@+id/name"
         android:layout_gravity="center"
@@ -17,12 +22,12 @@
         android:id="@+id/favorite"
         android:background="@drawable/check"
         android:layout_gravity="right"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="25dp"
+        android:layout_height="38dp"
         android:textOn=""
         android:textOff=""
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:layout_centerVertical="true"
-        android:layout_weight="0.1"/>
+        android:layout_weight="0.05"/>
 </LinearLayout>
