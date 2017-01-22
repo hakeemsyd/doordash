@@ -23,7 +23,6 @@ import sample.doordash.com.doordash.domain.AuthToken;
 import sample.doordash.com.doordash.domain.Credential;
 import sample.doordash.com.doordash.domain.User;
 import sample.doordash.com.doordash.service.DoorDashClient;
-import sample.doordash.com.doordash.storage.Storage;
 
 /**
  * Created by Hakeem on 1/15/17.
@@ -108,9 +107,11 @@ public class LoginActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        if(mSubscriptions != null){
-            for(Subscription s: mSubscriptions){
-                s.unsubscribe();
+        if (mSubscriptions != null) {
+            for (Subscription s : mSubscriptions) {
+                if (!s.isUnsubscribed()) {
+                    s.unsubscribe();
+                }
             }
         }
         super.onDestroy();
@@ -140,7 +141,7 @@ public class LoginActivity extends Activity {
         mLoginLayout.setVisibility(View.VISIBLE);
     }
 
-    private void doLogin(){
+    private void doLogin() {
         setInProgress(true);
         Subscription sub = DoorDashClient.getInstance().getAuthToken(new Credential(mUser.getText().toString(), mPass.getText().toString()))
                 .subscribeOn(Schedulers.io())
@@ -169,7 +170,7 @@ public class LoginActivity extends Activity {
         mSubscriptions.add(sub);
     }
 
-    private void onTokenRetrieved(final String token){
+    private void onTokenRetrieved(final String token) {
 
         Subscription sub = DoorDashClient.getInstance()
                 .getUserInfo(token)
@@ -178,7 +179,6 @@ public class LoginActivity extends Activity {
                 .subscribe(new Observer<User>() {
                     @Override
                     public void onCompleted() {
-
                     }
 
                     @Override
@@ -196,5 +196,6 @@ public class LoginActivity extends Activity {
                         showUserInfo(user);
                     }
                 });
+        mSubscriptions.add(sub);
     }
 }
