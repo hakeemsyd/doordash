@@ -15,8 +15,16 @@ public class MenuCategory {
     @SerializedName("items")
     public final List<MenuItem> mItems;
 
-    public MenuCategory(long id, List<MenuItem> items){
+    @SerializedName("title")
+    public final String mTitle;
+
+    @SerializedName("subtitle")
+    public final String mSubtitle;
+
+    public MenuCategory(long id, List<MenuItem> items, String title, String subtitle){
         this.mId = id;
         this.mItems = items;
+        this.mTitle = title;
+        this.mSubtitle = subtitle;
     }
 }

@@ -11,6 +11,7 @@ import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import rx.Observable;
 import sample.doordash.com.doordash.Constants;
+import sample.doordash.com.doordash.domain.MenuCategory;
 import sample.doordash.com.doordash.domain.MenuItem;
 import sample.doordash.com.doordash.domain.Restaurant;
 import sample.doordash.com.doordash.domain.AuthToken;
@@ -61,6 +62,10 @@ public class DoorDashClient {
 
     public Observable<Menu> getMenu(long restaurantId, long menuId){
         return mService.getMenu(restaurantId, menuId);
+    }
+
+    public Observable<List<Menu>> getMenu(long restaurantId){
+        return mService.getMenu(restaurantId);
     }
 
     public Observable<MenuItem> getMenuItem(long restaurantId, long itemId){
