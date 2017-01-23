@@ -2,7 +2,7 @@ package sample.doordash.com.doordash.ui;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
+import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +28,7 @@ import sample.doordash.com.doordash.service.DoorDashClient;
  * Created by Hakeem on 1/21/17.
  */
 
-public class MenuItemFragment extends Fragment implements View.OnClickListener {
+public class MenuItemDialogFragment extends DialogFragment implements View.OnClickListener {
 
     private static final String KEY_RESTAURANT_ID = "restaurant_id";
     private static final String KEY_ITEM_ID = "item_id";
@@ -41,14 +41,20 @@ public class MenuItemFragment extends Fragment implements View.OnClickListener {
     private MenuItem mItem;
     private List<Subscription> mSubscriptions = new ArrayList<>();
 
-    public static final MenuItemFragment newInstance(long restaurantId, long itemId) {
-        MenuItemFragment f = new MenuItemFragment();
+    public static final MenuItemDialogFragment newInstance(long restaurantId, long itemId) {
+        MenuItemDialogFragment f = new MenuItemDialogFragment();
         Bundle b = new Bundle();
         b.putLong(KEY_RESTAURANT_ID, restaurantId);
         b.putLong(KEY_ITEM_ID, itemId);
 
         f.setArguments(b);
         return f;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setStyle(DialogFragment.STYLE_NORMAL, android.R.style.Theme_Material_Light_Dialog_Alert);
     }
 
     @Nullable
