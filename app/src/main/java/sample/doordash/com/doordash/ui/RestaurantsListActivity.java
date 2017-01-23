@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -33,14 +32,12 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import sample.doordash.com.doordash.Constants;
 import sample.doordash.com.doordash.R;
-import sample.doordash.com.doordash.domain.CartItem;
 import sample.doordash.com.doordash.domain.Restaurant;
 import sample.doordash.com.doordash.domain.User;
 import sample.doordash.com.doordash.service.DoorDashClient;
 import sample.doordash.com.doordash.storage.Preferences;
-import sample.doordash.com.doordash.storage.Storage;
 
-public class RestaurantsListActivity extends AppCompatActivity {
+public class RestaurantsListActivity extends CartActivity {
 
     private static final String KEY_LOC_LATITUDE = "loc_lat";
     private static final String KEY_LOC_LONGITUDE = "loc_long";
@@ -53,11 +50,7 @@ public class RestaurantsListActivity extends AppCompatActivity {
     private TextView mEmpty;
     private boolean mFavouritesMode = false;
     private LatLng mLoc = new LatLng(Constants.DEFAULT_LAT, Constants.DEFAULT_LNG);
-    ;
-    private List<Subscription> mSubscriptions;
-    private Storage mStorage;
     private Preferences mPrefs;
-    private MenuItem mCartMenuItem;
 
     public static Intent start(Context context, long lng, long lat) {
         Intent i = new Intent();
@@ -87,9 +80,7 @@ public class RestaurantsListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_resturants_list);
-        mStorage = new Storage(this);
         mPrefs = new Preferences(this);
-        mSubscriptions = new ArrayList<>();
 
         if (getIntent().getExtras() != null) {
             Bundle b = getIntent().getExtras();
@@ -134,20 +125,13 @@ public class RestaurantsListActivity extends AppCompatActivity {
         } else {
             showNearbyRestaurants();
         }
-
-        if (mCartMenuItem != null) {
-            updateCartOption();
-        }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
-        mCartMenuItem = menu.findItem(R.id.shopping_cart);
-        mCartMenuItem.setVisible(false);
-        updateCartOption();
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -169,16 +153,6 @@ public class RestaurantsListActivity extends AppCompatActivity {
         }
 
         return true;
-    }
-
-    @Override
-    protected void onDestroy() {
-        for (Subscription sub : mSubscriptions) {
-            if (!sub.isUnsubscribed()) {
-                sub.unsubscribe();
-            }
-        }
-        super.onDestroy();
     }
 
     private void updateListView(final List<Restaurant> restaurants) {
@@ -318,30 +292,6 @@ public class RestaurantsListActivity extends AppCompatActivity {
                         updateListView(items);
                     }
                 });
-        mSubscriptions.add(sub);
-    }
-
-    private void updateCartOption() {
-        Subscription sub = mStorage.getCartItems()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<List<CartItem>>() {
-                    @Override
-                    public void onCompleted() {
-
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onNext(List<CartItem> cartItems) {
-                        mCartMenuItem.setVisible(cartItems != null && cartItems.size() > 0);
-                    }
-                });
-
         mSubscriptions.add(sub);
     }
 }

@@ -13,7 +13,9 @@ import java.util.concurrent.Callable;
 import rx.Observable;
 import rx.Subscriber;
 import sample.doordash.com.doordash.domain.CartItem;
+import sample.doordash.com.doordash.domain.CartItemAddedEvent;
 import sample.doordash.com.doordash.domain.Restaurant;
+import sample.doordash.com.doordash.util.BusProvider;
 
 /**
  * Created by Hakeem on 1/21/17.
@@ -169,6 +171,8 @@ public class Storage {
             db.update(StorageDefinitions.Cart.TABLE_NAME, newItem.toContentValues(),
                     StorageDefinitions.Cart._ID + "=" + prev.mId, null);
         }
+
+        BusProvider.getBus().post(new CartItemAddedEvent());
     }
 
     private long addNewItemToCartInt(CartItem item){

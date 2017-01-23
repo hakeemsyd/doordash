@@ -8,14 +8,19 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
+
+import com.squareup.otto.Subscribe;
 
 import sample.doordash.com.doordash.R;
+import sample.doordash.com.doordash.domain.CartItemAddedEvent;
 
 /**
  * Created by Hakeem on 1/21/17.
  */
 
-public class MenuActivity extends AppCompatActivity {
+public class MenuActivity extends CartActivity {
 
     private static final String KEY_RESTAURANT_ID = "restaurant_id";
     private long mRestaurantId;
@@ -40,6 +45,13 @@ public class MenuActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.cart, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
     public void showMenuItemDetails(long menuItemId) {
 
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -53,5 +65,10 @@ public class MenuActivity extends AppCompatActivity {
         DialogFragment newFragment = MenuItemDialogFragment.newInstance(mRestaurantId, menuItemId);
         newFragment.show(ft, "menu_item_dialog");
 
+    }
+
+    @Subscribe
+    public void onEvent(CartItemAddedEvent event){
+        updateCartOption();
     }
 }
