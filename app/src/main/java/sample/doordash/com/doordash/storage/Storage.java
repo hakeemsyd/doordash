@@ -24,10 +24,10 @@ import sample.doordash.com.doordash.util.BusProvider;
 
 public class Storage {
 
-    private DoorDashDBHelper mHelper;
+    private DoorDashDbHelper mHelper;
 
     public Storage(Context context) {
-        mHelper = new DoorDashDBHelper(context);
+        mHelper = new DoorDashDbHelper(context);
     }
 
     public Observable<List<Restaurant>> getBookmarks() {
