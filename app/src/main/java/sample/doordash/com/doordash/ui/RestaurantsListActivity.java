@@ -6,7 +6,6 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -33,25 +32,29 @@ import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import sample.doordash.com.doordash.Constants;
-import sample.doordash.com.doordash.storage.Preferences;
 import sample.doordash.com.doordash.R;
 import sample.doordash.com.doordash.domain.Restaurant;
+import sample.doordash.com.doordash.domain.User;
 import sample.doordash.com.doordash.service.DoorDashClient;
+import sample.doordash.com.doordash.storage.Preferences;
 import sample.doordash.com.doordash.storage.Storage;
 
 public class RestaurantsListActivity extends AppCompatActivity {
 
     private static final String KEY_LOC_LATITUDE = "loc_lat";
     private static final String KEY_LOC_LONGITUDE = "loc_long";
+    private static final String KEY_MODE = "mode";
+
     private static final int PLACE_PICKER_REQUEST = 100;
     private RestaurantsAdapter mAdapter;
     private ListView mListView;
     private ProgressBar mProgress;
     private TextView mEmpty;
-    private boolean mFavouritesMode;
-    private LatLng mLoc;
-    private Subscription mSubscription;
+    private boolean mFavouritesMode = false;
+    private LatLng mLoc = new LatLng(Constants.DEFAULT_LAT, Constants.DEFAULT_LNG);;
+    private List<Subscription> mSubscriptions;
     private Storage mStorage;
+    private Preferences mPrefs;
 
     public static Intent start(Context context, long lng, long lat) {
         Intent i = new Intent();
@@ -82,15 +85,17 @@ public class RestaurantsListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_resturants_list);
         mStorage = new Storage(this);
-        mFavouritesMode = false;
+        mPrefs = new Preferences(this);
+        mSubscriptions = new ArrayList<>();
 
         if (getIntent().getExtras() != null) {
             Bundle b = getIntent().getExtras();
             mLoc = new LatLng(b.getDouble(KEY_LOC_LATITUDE), b.getDouble(KEY_LOC_LONGITUDE));
-        } else if (savedInstanceState != null) {
+        }
+
+        if (savedInstanceState != null) {
             mLoc = new LatLng(savedInstanceState.getDouble(KEY_LOC_LATITUDE), savedInstanceState.getDouble(KEY_LOC_LONGITUDE));
-        } else {
-            mLoc = new LatLng(Constants.DEFAULT_LAT, Constants.DEFAULT_LNG);
+            mFavouritesMode = savedInstanceState.getBoolean(KEY_MODE);
         }
 
         mListView = (ListView) findViewById(R.id.list);
@@ -114,12 +119,18 @@ public class RestaurantsListActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putDouble(KEY_LOC_LATITUDE, mLoc.latitude);
         outState.putDouble(KEY_LOC_LONGITUDE, mLoc.longitude);
+        outState.putBoolean(KEY_MODE, mFavouritesMode);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        refreshList();
+        updateUserInfo();
+        if(mFavouritesMode){
+            showBookmarks();
+        }else{
+            showNearbyRestaurants();
+        }
     }
 
     @Override
@@ -134,12 +145,11 @@ public class RestaurantsListActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.view_favourites) {
             if (mFavouritesMode) {
                 mFavouritesMode = false;
-                item.setIcon(R.drawable.ic_favorite_border_white_36dp);
+                showNearbyRestaurants();
             } else {
                 mFavouritesMode = true;
-                item.setIcon(R.drawable.ic_favorite_white_36dp);
+                showBookmarks();
             }
-            refreshList();
         } else if (item.getItemId() == R.id.pick_location) {
             launchPlacePicker();
         } else {
@@ -151,8 +161,10 @@ public class RestaurantsListActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        if (mSubscription != null && !mSubscription.isUnsubscribed()) {
-            mSubscription.unsubscribe();
+        for(Subscription sub : mSubscriptions){
+            if(!sub.isUnsubscribed()){
+                sub.unsubscribe();
+            }
         }
         super.onDestroy();
     }
@@ -210,62 +222,90 @@ public class RestaurantsListActivity extends AppCompatActivity {
                 String toastMsg = String.format("Place: %s", place.getName());
                 Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
                 mLoc = place.getLatLng();
-                refreshList();
+                showNearbyRestaurants();
             } else {
                 mLoc = new LatLng(Constants.DEFAULT_LAT, Constants.DEFAULT_LNG);
             }
         }
     }
 
-    void refreshList() {
-        if (mSubscription != null && !mSubscription.isUnsubscribed()) {
-            mSubscription.unsubscribe();
-        }
-
-        setInProgress();
-        if (mFavouritesMode) {
-            mSubscription = mStorage.getBookmarks()
-                    .subscribeOn(Schedulers.computation())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<List<Restaurant>>() {
-                        @Override
-                        public void onCompleted() {
-
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-                            Log.d("", "In onError()");
-                        }
-
-                        @Override
-                        public void onNext(List<Restaurant> restaurants) {
-                            updateListView(restaurants);
-                        }
-                    });
-        } else {
-            mSubscription = DoorDashClient.getInstance()
-                    .getRestaurants(mLoc.latitude, mLoc.longitude)
+    private void updateUserInfo(){
+        String token = mPrefs.getToken();
+        if(token!= null && !token.isEmpty()){
+            Subscription sub = DoorDashClient.getInstance()
+                    .getUserInfo(token)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<List<Restaurant>>() {
+                    .subscribe(new Observer<User>() {
                         @Override
                         public void onCompleted() {
-                            Log.d("", "In onCompleted()");
+
                         }
 
                         @Override
                         public void onError(Throwable e) {
-                            e.printStackTrace();
-                            Log.d("", "In onError()");
+                            setTitle(R.string.guest_user_name);
                         }
 
                         @Override
-                        public void onNext(List<Restaurant> items) {
-                            Log.d("", "In onNext()");
-                            updateListView(items);
+                        public void onNext(User user) {
+                            setTitle(user.mFirstName + " " + user.mLastName);
                         }
                     });
+            mSubscriptions.add(sub);
+        }else{
+            setTitle(R.string.guest_user_name);
         }
+    }
+
+    void showBookmarks(){
+        setInProgress();
+        Subscription sub = mStorage.getBookmarks()
+                .subscribeOn(Schedulers.computation())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<List<Restaurant>>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.d("", "In onError()");
+                    }
+
+                    @Override
+                    public void onNext(List<Restaurant> restaurants) {
+                        updateListView(restaurants);
+                    }
+                });
+        mSubscriptions.add(sub);
+    }
+
+    void showNearbyRestaurants(){
+        setInProgress();
+        Subscription sub = DoorDashClient.getInstance()
+                .getRestaurants(mLoc.latitude, mLoc.longitude)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<List<Restaurant>>() {
+                    @Override
+                    public void onCompleted() {
+                        Log.d("", "In onCompleted()");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                        Log.d("", "In onError()");
+                    }
+
+                    @Override
+                    public void onNext(List<Restaurant> items) {
+                        Log.d("", "In onNext()");
+                        updateListView(items);
+                    }
+                });
+        mSubscriptions.add(sub);
     }
 }
