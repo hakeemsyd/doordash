@@ -9,6 +9,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import rx.Observable;
+import sample.doordash.com.doordash.domain.MenuCategory;
 import sample.doordash.com.doordash.domain.MenuItem;
 import sample.doordash.com.doordash.domain.Restaurant;
 import sample.doordash.com.doordash.domain.AuthToken;
@@ -35,6 +36,9 @@ public interface DoorDashService {
 
     @GET("/v2/restaurant/{restaurant_id}/menu/{menu_id}/")
     Observable<Menu> getMenu(@Path("restaurant_id") long rId, @Path("menu_id") long mId);
+
+    @GET("/v2/restaurant/{restaurant_id}/menu/")
+    Observable<List<Menu>> getMenu(@Path("restaurant_id") long rId);
 
     @GET("/v2/restaurant/{restaurant_id}/item/{item_id}/")
     Observable<MenuItem> getMenuItem(@Path("restaurant_id") long rId, @Path("item_id") long iId);

@@ -1,26 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
     <LinearLayout
-        android:padding="12dp"
         android:layout_width="300dp"
+        android:layout_height="300dp"
         android:gravity="center"
-        android:layout_height="300dp">
+        android:padding="12dp">
+
         <ImageView
 
             android:id="@+id/restinfo_icon"
-            android:scaleType="fitCenter"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:scaleType="fitCenter" />
     </LinearLayout>
 
     <LinearLayout
-        android:gravity="center"
-        android:padding="12dp"
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="12dp">
 
         <TextView
             android:id="@+id/resinfo_name"
@@ -42,6 +45,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
+        <Button
+            android:id="@+id/open_menu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Got to Menu" />
 
     </LinearLayout>
 

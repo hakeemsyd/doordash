@@ -1,11 +1,11 @@
 package sample.doordash.com.doordash.ui;
 
-import android.app.DialogFragment;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -190,16 +190,16 @@ public class RestaurantsListActivity extends AppCompatActivity {
     }
 
     private void showDialog(long id) {
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 
-        Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+        Fragment prev = getSupportFragmentManager().findFragmentByTag("restaurant_detail_dialog");
         if (prev != null) {
             ft.remove(prev);
         }
         ft.addToBackStack(null);
 
         DialogFragment newFragment = RestaurantDialogFragment.newInstance(id);
-        newFragment.show(ft, "dialog");
+        newFragment.show(ft, "restaurant_detail_dialog");
     }
 
     private void launchPlacePicker() {

@@ -16,9 +16,17 @@ public class MenuItem {
     @SerializedName("description")
     public final String mDesc;
 
-    public MenuItem(long id, String name, String desc){
+    @SerializedName("price")
+    public final long mPrice;
+
+    @SerializedName("image_url")
+    public final String mImageSrc;
+
+    public MenuItem(long id, String name, String desc, long price, String imageSrc){
         mId = id;
         mName = name;
         mDesc = desc;
+        mPrice = price;
+        mImageSrc = imageSrc;
     }
 }

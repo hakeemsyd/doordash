@@ -1,11 +1,12 @@
 package sample.doordash.com.doordash.ui;
 
-import android.app.DialogFragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,6 +34,7 @@ public class RestaurantDialogFragment extends DialogFragment {
     private TextView mAddress;
     private TextView mDistance;
     private ImageView mIcon;
+    private Button mMenu;
     private Subscription mSubscription;
 
     static RestaurantDialogFragment newInstance(long id) {
@@ -43,6 +45,13 @@ public class RestaurantDialogFragment extends DialogFragment {
         f.setArguments(args);
         return f;
     }
+
+    private final View.OnClickListener mMenuButtonClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            startActivity(MenuActivity.start(getActivity(), mId));
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -60,6 +69,8 @@ public class RestaurantDialogFragment extends DialogFragment {
         mDistance = (TextView) v.findViewById(R.id.resinfo_distance);
         mRestPhone = (TextView) v.findViewById(R.id.resinfo_phone);
         mIcon = (ImageView) v.findViewById(R.id.restinfo_icon);
+        mMenu = (Button) v.findViewById(R.id.open_menu);
+        mMenu.setOnClickListener(mMenuButtonClickListener);
         return v;
     }
 
