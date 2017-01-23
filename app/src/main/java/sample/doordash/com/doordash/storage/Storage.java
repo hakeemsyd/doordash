@@ -92,6 +92,16 @@ public class Storage {
         });
     }
 
+    public Observable<Void> clearCart(){
+        return makeObservable(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                clearCartInt();
+                return null;
+            }
+        });
+    }
+
     private long addBookmarkInt(final Restaurant restaurant) {
         SQLiteDatabase db = mHelper.getWritableDatabase();
         long newRowId = db.insert(StorageDefinitions.Bookmarks.TABLE_NAME, null, restaurant.toContentValues());
@@ -188,6 +198,11 @@ public class Storage {
         }else{
             db.delete(StorageDefinitions.Cart.TABLE_NAME, StorageDefinitions.Cart.COLUMN_ITEM_ID +"="+ item.mItemId, null);
         }
+    }
+
+    private void clearCartInt(){
+        SQLiteDatabase db = mHelper.getWritableDatabase();
+        db.delete(StorageDefinitions.Cart.TABLE_NAME,"1",null);
     }
 
     private List<CartItem> getCartItemsInt(){

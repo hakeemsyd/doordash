@@ -33,6 +33,7 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import sample.doordash.com.doordash.Constants;
 import sample.doordash.com.doordash.R;
+import sample.doordash.com.doordash.domain.CartItem;
 import sample.doordash.com.doordash.domain.Restaurant;
 import sample.doordash.com.doordash.domain.User;
 import sample.doordash.com.doordash.service.DoorDashClient;
@@ -51,10 +52,12 @@ public class RestaurantsListActivity extends AppCompatActivity {
     private ProgressBar mProgress;
     private TextView mEmpty;
     private boolean mFavouritesMode = false;
-    private LatLng mLoc = new LatLng(Constants.DEFAULT_LAT, Constants.DEFAULT_LNG);;
+    private LatLng mLoc = new LatLng(Constants.DEFAULT_LAT, Constants.DEFAULT_LNG);
+    ;
     private List<Subscription> mSubscriptions;
     private Storage mStorage;
     private Preferences mPrefs;
+    private MenuItem mCartMenuItem;
 
     public static Intent start(Context context, long lng, long lat) {
         Intent i = new Intent();
@@ -126,10 +129,14 @@ public class RestaurantsListActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateUserInfo();
-        if(mFavouritesMode){
+        if (mFavouritesMode) {
             showBookmarks();
-        }else{
+        } else {
             showNearbyRestaurants();
+        }
+
+        if (mCartMenuItem != null) {
+            updateCartOption();
         }
     }
 
@@ -137,6 +144,9 @@ public class RestaurantsListActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
+        mCartMenuItem = menu.findItem(R.id.shopping_cart);
+        mCartMenuItem.setVisible(false);
+        updateCartOption();
         return true;
     }
 
@@ -152,6 +162,8 @@ public class RestaurantsListActivity extends AppCompatActivity {
             }
         } else if (item.getItemId() == R.id.pick_location) {
             launchPlacePicker();
+        } else if (item.getItemId() == R.id.shopping_cart) {
+
         } else {
             return super.onOptionsItemSelected(item);
         }
@@ -161,8 +173,8 @@ public class RestaurantsListActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        for(Subscription sub : mSubscriptions){
-            if(!sub.isUnsubscribed()){
+        for (Subscription sub : mSubscriptions) {
+            if (!sub.isUnsubscribed()) {
                 sub.unsubscribe();
             }
         }
@@ -229,9 +241,9 @@ public class RestaurantsListActivity extends AppCompatActivity {
         }
     }
 
-    private void updateUserInfo(){
+    private void updateUserInfo() {
         String token = mPrefs.getToken();
-        if(token!= null && !token.isEmpty()){
+        if (token != null && !token.isEmpty()) {
             Subscription sub = DoorDashClient.getInstance()
                     .getUserInfo(token)
                     .subscribeOn(Schedulers.io())
@@ -253,12 +265,12 @@ public class RestaurantsListActivity extends AppCompatActivity {
                         }
                     });
             mSubscriptions.add(sub);
-        }else{
+        } else {
             setTitle(R.string.guest_user_name);
         }
     }
 
-    void showBookmarks(){
+    void showBookmarks() {
         setInProgress();
         Subscription sub = mStorage.getBookmarks()
                 .subscribeOn(Schedulers.computation())
@@ -282,7 +294,7 @@ public class RestaurantsListActivity extends AppCompatActivity {
         mSubscriptions.add(sub);
     }
 
-    void showNearbyRestaurants(){
+    void showNearbyRestaurants() {
         setInProgress();
         Subscription sub = DoorDashClient.getInstance()
                 .getRestaurants(mLoc.latitude, mLoc.longitude)
@@ -306,6 +318,30 @@ public class RestaurantsListActivity extends AppCompatActivity {
                         updateListView(items);
                     }
                 });
+        mSubscriptions.add(sub);
+    }
+
+    private void updateCartOption() {
+        Subscription sub = mStorage.getCartItems()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<List<CartItem>>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onNext(List<CartItem> cartItems) {
+                        mCartMenuItem.setVisible(cartItems != null && cartItems.size() > 0);
+                    }
+                });
+
         mSubscriptions.add(sub);
     }
 }
