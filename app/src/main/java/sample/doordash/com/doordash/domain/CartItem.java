@@ -3,8 +3,6 @@ package sample.doordash.com.doordash.domain;
 import android.content.ContentValues;
 import android.database.Cursor;
 
-import java.util.ArrayList;
-
 import sample.doordash.com.doordash.storage.StorageDefinitions;
 
 /**

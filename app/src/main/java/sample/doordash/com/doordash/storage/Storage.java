@@ -13,7 +13,6 @@ import java.util.concurrent.Callable;
 import rx.Observable;
 import rx.Subscriber;
 import sample.doordash.com.doordash.domain.CartItem;
-import sample.doordash.com.doordash.domain.MenuItem;
 import sample.doordash.com.doordash.domain.Restaurant;
 
 /**
@@ -83,7 +82,7 @@ public class Storage {
         });
     }
 
-    public Observable<Void> removeCartItem(CartItem item){\
+    public Observable<Void> removeCartItem(final CartItem item){
         return makeObservable(new Callable<Void>() {
             @Override
             public Void call() throws Exception {
