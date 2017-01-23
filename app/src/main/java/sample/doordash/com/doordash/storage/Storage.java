@@ -14,6 +14,7 @@ import rx.Observable;
 import rx.Subscriber;
 import sample.doordash.com.doordash.domain.CartItem;
 import sample.doordash.com.doordash.domain.CartItemAddedEvent;
+import sample.doordash.com.doordash.domain.CartItemDeletedEvent;
 import sample.doordash.com.doordash.domain.Restaurant;
 import sample.doordash.com.doordash.util.BusProvider;
 
@@ -202,6 +203,8 @@ public class Storage {
         }else{
             db.delete(StorageDefinitions.Cart.TABLE_NAME, StorageDefinitions.Cart.COLUMN_ITEM_ID +"="+ item.mItemId, null);
         }
+
+        BusProvider.getBus().post(new CartItemDeletedEvent());
     }
 
     private void clearCartInt(){

@@ -34,6 +34,16 @@ public abstract class CartActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.shopping_cart) {
+            startActivity(CartItemsListActivity.start(this));
+        } else {
+            return super.onOptionsItemSelected(item);
+        }
+        return true;
+    }
+
+    @Override
     protected void onResume() {
         BusProvider.getBus().register(this);
         mStorage = new Storage(this);

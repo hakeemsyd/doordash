@@ -146,8 +146,6 @@ public class RestaurantsListActivity extends CartActivity {
             }
         } else if (item.getItemId() == R.id.pick_location) {
             launchPlacePicker();
-        } else if (item.getItemId() == R.id.shopping_cart) {
-
         } else {
             return super.onOptionsItemSelected(item);
         }
