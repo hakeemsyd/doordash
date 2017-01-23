@@ -18,12 +18,14 @@ public class DoorDashDBHelper extends SQLiteOpenHelper {
     }
 
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(StorageDefinitions.SQL_CREATE_BOOKMARKS_TABLE);
+        db.execSQL(StorageDefinitions.Bookmarks.SQL_CREATE_BOOKMARKS_TABLE);
+        db.execSQL(StorageDefinitions.Cart.SQL_CREATE_CART_TABLE);
     }
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // This database is only a cache for online data, so its upgrade policy is
         // to simply to discard the data and start over
-        db.execSQL(StorageDefinitions.SQL_DELETE_BOOKMARKS_TABLE);
+        db.execSQL(StorageDefinitions.Bookmarks.SQL_DELETE_BOOKMARKS_TABLE);
+        db.execSQL(StorageDefinitions.Cart.SQL_DELETE_CART_TABLE);
         onCreate(db);
     }
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {

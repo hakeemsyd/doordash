@@ -14,6 +14,12 @@
         android:checkable="false"
         android:icon="@drawable/ic_add_location_white_24dp"
         android:title="Favourites"/>
+    <item
+        android:id="@+id/shopping_cart"
+        app:showAsAction="always"
+        android:checkable="false"
+        android:icon="@drawable/ic_shopping_cart_white_24dp"
+        android:title="Cart"/>
 
 </menu>
 

@@ -17,12 +17,13 @@ import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
-import sample.doordash.com.doordash.storage.Preferences;
 import sample.doordash.com.doordash.R;
+import sample.doordash.com.doordash.storage.Preferences;
 import sample.doordash.com.doordash.domain.AuthToken;
 import sample.doordash.com.doordash.domain.Credential;
 import sample.doordash.com.doordash.domain.User;
 import sample.doordash.com.doordash.service.DoorDashClient;
+import sample.doordash.com.doordash.storage.Storage;
 
 /**
  * Created by Hakeem on 1/15/17.
@@ -42,12 +43,14 @@ public class LoginActivity extends Activity {
     private Button mContinue;
     private LinearLayout mLoginLayout;
     private LinearLayout mUserInfoLayout;
+    private Storage mStorage;
 
     private List<Subscription> mSubscriptions = new ArrayList<>();
 
     private final View.OnClickListener mLoginButtonClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            clearCart();
             doLogin();
         }
     };
@@ -55,6 +58,7 @@ public class LoginActivity extends Activity {
     private final View.OnClickListener mLogoutButtonClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            clearCart();
             mPrefs.removeToken();
             showLoginScreen();
         }
@@ -72,6 +76,7 @@ public class LoginActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         mPrefs = new Preferences(this);
+        mStorage = new Storage(this);
 
         mLogin = (Button) findViewById(R.id.login);
         mGuest = (Button) findViewById(R.id.guest_user);
@@ -92,7 +97,6 @@ public class LoginActivity extends Activity {
         mGuest.setOnClickListener(mGuestButtonListener);
         mLogout.setOnClickListener(mLogoutButtonClickListener);
         mContinue.setOnClickListener(mGuestButtonListener);
-
     }
 
     @Override
@@ -194,6 +198,28 @@ public class LoginActivity extends Activity {
                         setInProgress(false);
                         Toast.makeText(getApplicationContext(), "Login Success: " + user.mFirstName, Toast.LENGTH_SHORT).show();
                         showUserInfo(user);
+                    }
+                });
+        mSubscriptions.add(sub);
+    }
+
+    private void clearCart(){
+        Subscription sub = mStorage.clearCart()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Void>() {
+                    @Override
+                    public void onCompleted() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(getApplicationContext(), "Could not clear cart", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onNext(Void aVoid) {
+                        Toast.makeText(getApplicationContext(), "Cart cleared", Toast.LENGTH_SHORT).show();
                     }
                 });
         mSubscriptions.add(sub);

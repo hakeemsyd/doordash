@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -37,9 +36,8 @@ import sample.doordash.com.doordash.domain.Restaurant;
 import sample.doordash.com.doordash.domain.User;
 import sample.doordash.com.doordash.service.DoorDashClient;
 import sample.doordash.com.doordash.storage.Preferences;
-import sample.doordash.com.doordash.storage.Storage;
 
-public class RestaurantsListActivity extends AppCompatActivity {
+public class RestaurantsListActivity extends CartActivity {
 
     private static final String KEY_LOC_LATITUDE = "loc_lat";
     private static final String KEY_LOC_LONGITUDE = "loc_long";
@@ -51,9 +49,7 @@ public class RestaurantsListActivity extends AppCompatActivity {
     private ProgressBar mProgress;
     private TextView mEmpty;
     private boolean mFavouritesMode = false;
-    private LatLng mLoc = new LatLng(Constants.DEFAULT_LAT, Constants.DEFAULT_LNG);;
-    private List<Subscription> mSubscriptions;
-    private Storage mStorage;
+    private LatLng mLoc = new LatLng(Constants.DEFAULT_LAT, Constants.DEFAULT_LNG);
     private Preferences mPrefs;
 
     public static Intent start(Context context, long lng, long lat) {
@@ -84,9 +80,7 @@ public class RestaurantsListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_resturants_list);
-        mStorage = new Storage(this);
         mPrefs = new Preferences(this);
-        mSubscriptions = new ArrayList<>();
 
         if (getIntent().getExtras() != null) {
             Bundle b = getIntent().getExtras();
@@ -126,9 +120,9 @@ public class RestaurantsListActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateUserInfo();
-        if(mFavouritesMode){
+        if (mFavouritesMode) {
             showBookmarks();
-        }else{
+        } else {
             showNearbyRestaurants();
         }
     }
@@ -137,7 +131,7 @@ public class RestaurantsListActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -157,16 +151,6 @@ public class RestaurantsListActivity extends AppCompatActivity {
         }
 
         return true;
-    }
-
-    @Override
-    protected void onDestroy() {
-        for(Subscription sub : mSubscriptions){
-            if(!sub.isUnsubscribed()){
-                sub.unsubscribe();
-            }
-        }
-        super.onDestroy();
     }
 
     private void updateListView(final List<Restaurant> restaurants) {
@@ -229,9 +213,9 @@ public class RestaurantsListActivity extends AppCompatActivity {
         }
     }
 
-    private void updateUserInfo(){
+    private void updateUserInfo() {
         String token = mPrefs.getToken();
-        if(token!= null && !token.isEmpty()){
+        if (token != null && !token.isEmpty()) {
             Subscription sub = DoorDashClient.getInstance()
                     .getUserInfo(token)
                     .subscribeOn(Schedulers.io())
@@ -253,12 +237,12 @@ public class RestaurantsListActivity extends AppCompatActivity {
                         }
                     });
             mSubscriptions.add(sub);
-        }else{
+        } else {
             setTitle(R.string.guest_user_name);
         }
     }
 
-    void showBookmarks(){
+    void showBookmarks() {
         setInProgress();
         Subscription sub = mStorage.getBookmarks()
                 .subscribeOn(Schedulers.computation())
@@ -282,7 +266,7 @@ public class RestaurantsListActivity extends AppCompatActivity {
         mSubscriptions.add(sub);
     }
 
-    void showNearbyRestaurants(){
+    void showNearbyRestaurants() {
         setInProgress();
         Subscription sub = DoorDashClient.getInstance()
                 .getRestaurants(mLoc.latitude, mLoc.longitude)

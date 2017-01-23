@@ -21,8 +21,10 @@ import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import sample.doordash.com.doordash.R;
+import sample.doordash.com.doordash.domain.CartItem;
 import sample.doordash.com.doordash.domain.MenuItem;
 import sample.doordash.com.doordash.service.DoorDashClient;
+import sample.doordash.com.doordash.storage.Storage;
 
 /**
  * Created by Hakeem on 1/21/17.
@@ -39,6 +41,9 @@ public class MenuItemDialogFragment extends DialogFragment implements View.OnCli
     private TextView mPrice;
     private Button mAddToCart;
     private MenuItem mItem;
+    private Storage mStorage;
+    private long mRestaurantId;
+    private long mItemId;
     private List<Subscription> mSubscriptions = new ArrayList<>();
 
     public static final MenuItemDialogFragment newInstance(long restaurantId, long itemId) {
@@ -68,14 +73,20 @@ public class MenuItemDialogFragment extends DialogFragment implements View.OnCli
         mAddToCart = (Button) view.findViewById(R.id.btn_add_cart);
         mAddToCart.setOnClickListener(this);
 
-        long rId = getArguments().getLong(KEY_RESTAURANT_ID, 0);
-        long iId = getArguments().getLong(KEY_ITEM_ID, 0);
+        mRestaurantId = getArguments().getLong(KEY_RESTAURANT_ID, 0);
+        mItemId = getArguments().getLong(KEY_ITEM_ID, 0);
 
-        if (rId != 0 && iId != 0) {
-            updateView(rId, iId);
+        if (mRestaurantId != 0 && mItemId != 0) {
+            updateView(mRestaurantId, mItemId);
         }
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mStorage = new Storage(getActivity());
     }
 
     @Override
@@ -90,7 +101,26 @@ public class MenuItemDialogFragment extends DialogFragment implements View.OnCli
 
     @Override
     public void onClick(View v) {
-        Toast.makeText(getActivity(), "Checkout: " + mItem.mPrice, Toast.LENGTH_SHORT).show();
+        Subscription sub = mStorage.addCartItem(new CartItem(-1, mRestaurantId, mItemId, 1, mItem))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Void>() {
+                    @Override
+                    public void onCompleted() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(getActivity(), "Item could not be added", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onNext(Void aVoid) {
+                        Toast.makeText(getActivity(), "Item added to cart: " + mItemId, Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        mSubscriptions.add(sub);
     }
 
     private void updateView(long restaurantId, long itemId) {
