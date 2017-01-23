@@ -3,6 +3,8 @@ package sample.doordash.com.doordash.ui;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -20,22 +22,23 @@ import rx.schedulers.Schedulers;
 import sample.doordash.com.doordash.R;
 import sample.doordash.com.doordash.domain.Menu;
 import sample.doordash.com.doordash.domain.MenuCategory;
+import sample.doordash.com.doordash.domain.MenuItem;
 import sample.doordash.com.doordash.service.DoorDashClient;
 
 /**
  * Created by Hakeem on 1/21/17.
  */
 
-public class MenuCategoriesFragment extends Fragment {
+public class MenuItemListFragment extends Fragment {
 
     private static final String KEY_RESTAURANT_ID = "restaurant_id";
 
     private RecyclerView mRecyclerView;
-    private MenuCategoriesAdapter mAdapter;
+    private MenuItemsAdapter mAdapter;
     private Subscription mSubscription;
 
-    public static MenuCategoriesFragment newInstance(long restaurantId) {
-        MenuCategoriesFragment f = new MenuCategoriesFragment();
+    public static MenuItemListFragment newInstance(long restaurantId) {
+        MenuItemListFragment f = new MenuItemListFragment();
         Bundle b = new Bundle();
         b.putLong(KEY_RESTAURANT_ID, restaurantId);
         f.setArguments(b);
@@ -47,15 +50,17 @@ public class MenuCategoriesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.frag_menu_categories, container, false);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.menu_categories);
-        mAdapter = new MenuCategoriesAdapter(getContext(), new ArrayList<MenuCategory>());
+        mAdapter = new MenuItemsAdapter(getContext(), new ArrayList<MenuItem>());
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         layoutManager.setOrientation(LinearLayout.VERTICAL);
         mRecyclerView.setLayoutManager(layoutManager);
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
+        mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mRecyclerView.setAdapter(mAdapter);
 
         long id = getArguments().getLong(KEY_RESTAURANT_ID, 0);
         if(id != 0){
-            updateMenuCategories(id);
+            updateMenuItems(id);
         }else if(savedInstanceState != null){
 
         }
@@ -70,7 +75,7 @@ public class MenuCategoriesFragment extends Fragment {
         super.onDestroy();
     }
 
-    private void updateMenuCategories(long restaurantId) {
+    private void updateMenuItems(long restaurantId) {
             mSubscription = DoorDashClient.getInstance()
                     .getMenu(restaurantId)
                     .subscribeOn(Schedulers.io())
@@ -83,14 +88,18 @@ public class MenuCategoriesFragment extends Fragment {
 
                         @Override
                         public void onError(Throwable e) {
-                            mAdapter.update(new ArrayList<MenuCategory>());
+                            mAdapter.update(new ArrayList<MenuItem>());
                         }
 
                         @Override
                         public void onNext(List<Menu> menu) {
-                            if(menu.size() > 0){
-                                mAdapter.update(menu.get(0).mMenuCategories);
+                            List<MenuItem> items = new ArrayList<>();
+                            for(Menu m : menu){
+                                for(MenuCategory c : m.mMenuCategories){
+                                    items.addAll(c.mItems);
+                                }
                             }
+                            mAdapter.update(items);
                         }
                     });
     }

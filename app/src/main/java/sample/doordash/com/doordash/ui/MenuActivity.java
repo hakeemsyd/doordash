@@ -31,7 +31,7 @@ public class MenuActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            ft.replace(R.id.content_frame, MenuCategoriesFragment.newInstance(restaurantId));
+            ft.replace(R.id.content_frame, MenuItemListFragment.newInstance(restaurantId));
             ft.commit();
         }
     }
