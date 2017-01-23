@@ -23,6 +23,7 @@ import sample.doordash.com.doordash.R;
 import sample.doordash.com.doordash.domain.Menu;
 import sample.doordash.com.doordash.domain.MenuCategory;
 import sample.doordash.com.doordash.domain.MenuItem;
+import sample.doordash.com.doordash.domain.Restaurant;
 import sample.doordash.com.doordash.service.DoorDashClient;
 
 /**
@@ -35,7 +36,16 @@ public class MenuItemListFragment extends Fragment {
 
     private RecyclerView mRecyclerView;
     private MenuItemsAdapter mAdapter;
-    private Subscription mSubscription;
+
+    private List<Subscription> mSubscriptions = new ArrayList<>();
+
+    private final View.OnClickListener mMenuItemClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            MenuItem item = (MenuItem) v.getTag();
+            ((MenuActivity) getActivity()).showMenuItemDetails(item.mId);
+        }
+    };
 
     public static MenuItemListFragment newInstance(long restaurantId) {
         MenuItemListFragment f = new MenuItemListFragment();
@@ -48,9 +58,9 @@ public class MenuItemListFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.frag_menu_categories, container, false);
+        View view = inflater.inflate(R.layout.frag_menu_item_list, container, false);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.menu_categories);
-        mAdapter = new MenuItemsAdapter(getContext(), new ArrayList<MenuItem>());
+        mAdapter = new MenuItemsAdapter(getContext(), new ArrayList<MenuItem>(), mMenuItemClickListener);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         layoutManager.setOrientation(LinearLayout.VERTICAL);
         mRecyclerView.setLayoutManager(layoutManager);
@@ -61,6 +71,7 @@ public class MenuItemListFragment extends Fragment {
         long id = getArguments().getLong(KEY_RESTAURANT_ID, 0);
         if(id != 0){
             updateMenuItems(id);
+            updateTitle(id);
         }else if(savedInstanceState != null){
 
         }
@@ -69,14 +80,16 @@ public class MenuItemListFragment extends Fragment {
 
     @Override
     public void onDestroy() {
-        if (mSubscription != null && !mSubscription.isUnsubscribed()) {
-            mSubscription.unsubscribe();
+        for(Subscription s : mSubscriptions){
+            if(!s.isUnsubscribed()){
+                s.unsubscribe();
+            }
         }
         super.onDestroy();
     }
 
     private void updateMenuItems(long restaurantId) {
-            mSubscription = DoorDashClient.getInstance()
+        Subscription sub = DoorDashClient.getInstance()
                     .getMenu(restaurantId)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -102,5 +115,31 @@ public class MenuItemListFragment extends Fragment {
                             mAdapter.update(items);
                         }
                     });
+        mSubscriptions.add(sub);
+    }
+
+    public void updateTitle(long restaurantId){
+        Subscription sub = DoorDashClient.getInstance()
+                .getRestaurant(restaurantId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Restaurant>() {
+                               @Override
+                               public void onCompleted() {
+
+                               }
+
+                               @Override
+                               public void onError(Throwable e) {
+
+                               }
+
+                               @Override
+                               public void onNext(Restaurant restaurant) {
+                                    getActivity().setTitle(restaurant.mName);
+                               }
+                           });
+
+        mSubscriptions.add(sub);
     }
 }

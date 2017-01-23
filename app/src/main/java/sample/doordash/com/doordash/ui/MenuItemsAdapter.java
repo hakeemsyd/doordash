@@ -18,7 +18,8 @@ import sample.doordash.com.doordash.domain.MenuItem;
 
 public class MenuItemsAdapter extends RecyclerView.Adapter<MenuItemsAdapter.MenuItemViewHolder> {
     private List<MenuItem> mItems;
-    private Context mContext;
+    private final Context mContext;
+    private final View.OnClickListener mMenuItemClickListener;
 
     public class MenuItemViewHolder extends RecyclerView.ViewHolder {
         private TextView mMenuItemName;
@@ -37,9 +38,10 @@ public class MenuItemsAdapter extends RecyclerView.Adapter<MenuItemsAdapter.Menu
         }
     }
 
-    public MenuItemsAdapter(Context context, List<MenuItem> items) {
+    public MenuItemsAdapter(Context context, List<MenuItem> items, View.OnClickListener menuItemClickListener) {
         mContext = context;
         mItems = items;
+        mMenuItemClickListener = menuItemClickListener;
     }
 
     public void update(List<MenuItem> items){
@@ -58,14 +60,8 @@ public class MenuItemsAdapter extends RecyclerView.Adapter<MenuItemsAdapter.Menu
     @Override
     public void onBindViewHolder(MenuItemViewHolder holder, int position) {
         holder.updateView(mItems.get(position));
-
-        final MenuItem item = mItems.get(position);
-        holder.getView().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(mContext, "Item touched: " + item.mName, Toast.LENGTH_LONG).show();
-            }
-        });
+        holder.getView().setTag(mItems.get(position));
+        holder.getView().setOnClickListener(mMenuItemClickListener);
     }
 
     @Override
