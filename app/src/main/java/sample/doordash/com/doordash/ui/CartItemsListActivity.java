@@ -5,7 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.squareup.otto.Subscribe;
 
@@ -30,6 +33,7 @@ public class CartItemsListActivity extends AppCompatActivity {
     private CartItemsAdapter mAdapter;
     private ListView mListView;
     private List<Subscription> mSubscription;
+    private Button mCheckout;
     private Storage mStorage;
 
     public static Intent start(Context context) {
@@ -38,11 +42,20 @@ public class CartItemsListActivity extends AppCompatActivity {
         return i;
     }
 
+    private final View.OnClickListener mCheckoutButtonClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Toast.makeText(CartItemsListActivity.this, "Checkout! not implemented", Toast.LENGTH_SHORT).show();
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cart_items);
         mListView = (ListView) findViewById(R.id.cart_item_list);
+        mCheckout = (Button) findViewById(R.id.btn_checkout);
+        mCheckout.setOnClickListener(mCheckoutButtonClickListener);
         mStorage = new Storage(this);
         mSubscription = new ArrayList<>();
         mAdapter = new CartItemsAdapter(this, new ArrayList<CartItem>());
@@ -65,8 +78,8 @@ public class CartItemsListActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        for(Subscription s : mSubscription){
-            if(!s.isUnsubscribed()){
+        for (Subscription s : mSubscription) {
+            if (!s.isUnsubscribed()) {
                 s.unsubscribe();
             }
         }
@@ -91,13 +104,14 @@ public class CartItemsListActivity extends AppCompatActivity {
                     @Override
                     public void onNext(List<CartItem> cartItems) {
                         mAdapter.update(cartItems);
+                        mCheckout.setVisibility(cartItems.size() > 0 ? View.VISIBLE : View.INVISIBLE);
                     }
                 });
         mSubscription.add(sub);
     }
 
     @Subscribe
-    public void onEvent(CartItemDeletedEvent event){
+    public void onEvent(CartItemDeletedEvent event) {
         updateList();
     }
 }
