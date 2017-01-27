@@ -49,6 +49,7 @@ public class MenuItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
 
         public MenuItemViewHolder(View view) {
             super(view);
+            mView = view;
             mMenuItemName = (TextView) view.findViewById(R.id.menu_item_name);
         }
 
@@ -89,7 +90,7 @@ public class MenuItemsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
             View view = inflater.inflate(R.layout.rec_menu_category, parent, false);
             return new MenuItemCategoryViewHolder(view);
         }else{
-            View view = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+            View view = inflater.inflate(R.layout.rec_menu_item, parent, false);
             return new MenuItemViewHolder(view);
         }
     }
