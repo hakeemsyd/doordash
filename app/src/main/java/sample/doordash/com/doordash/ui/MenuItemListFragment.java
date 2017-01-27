@@ -14,6 +14,7 @@ import android.widget.LinearLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import rx.Observer;
 import rx.Subscription;
@@ -60,7 +61,7 @@ public class MenuItemListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.frag_menu_item_list, container, false);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.menu_categories);
-        mAdapter = new MenuItemsAdapter(getContext(), new ArrayList<MenuItem>(), mMenuItemClickListener);
+        mAdapter = new MenuItemsAdapter(getContext(), new ArrayList<Object>(), mMenuItemClickListener);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         layoutManager.setOrientation(LinearLayout.VERTICAL);
         mRecyclerView.setLayoutManager(layoutManager);
@@ -101,7 +102,7 @@ public class MenuItemListFragment extends Fragment {
 
                         @Override
                         public void onError(Throwable e) {
-                            mAdapter.update(new ArrayList<MenuItem>());
+                            mAdapter.update(new ArrayList<Object>());
                         }
 
                         @Override
@@ -112,10 +113,23 @@ public class MenuItemListFragment extends Fragment {
                                     items.addAll(c.mItems);
                                 }
                             }
-                            mAdapter.update(items);
+                            //mAdapter.update(items);
+                            if(items.size() > 0) {
+                                mAdapter.update(flattenMenu(menu.get(0).mMenuCategories));
+                            }
                         }
                     });
         mSubscriptions.add(sub);
+    }
+
+    private List<Object> flattenMenu(List<MenuCategory> cats){
+        List<Object> all = new ArrayList<>();
+        for(MenuCategory c : cats){
+            all.add(c);
+            all.addAll(c.mItems);
+        }
+
+        return all;
     }
 
     public void updateTitle(long restaurantId){
