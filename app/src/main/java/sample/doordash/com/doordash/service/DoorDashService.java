@@ -42,4 +42,7 @@ public interface DoorDashService {
 
     @GET("/v2/restaurant/{restaurant_id}/item/{item_id}/")
     Observable<MenuItem> getMenuItem(@Path("restaurant_id") long rId, @Path("item_id") long iId);
+
+    @GET("/v1/store_search")
+    Observable<List<Restaurant>> search(@Header("Authorization")String auth, @Query("lat") double lat, @Query("lng") double lng, @Query("query") String query, @Query("limit") int limit);
 }

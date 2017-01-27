@@ -12,6 +12,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -51,6 +53,8 @@ public class RestaurantsListActivity extends CartActivity {
     private boolean mFavouritesMode = false;
     private LatLng mLoc = new LatLng(Constants.DEFAULT_LAT, Constants.DEFAULT_LNG);
     private Preferences mPrefs;
+    private EditText mSearchQuery;
+    private Button mSearchBtn;
 
     public static Intent start(Context context, long lng, long lat) {
         Intent i = new Intent();
@@ -92,6 +96,9 @@ public class RestaurantsListActivity extends CartActivity {
             mFavouritesMode = savedInstanceState.getBoolean(KEY_MODE);
         }
 
+
+        mSearchQuery = (EditText) findViewById(R.id.search_box);
+        mSearchBtn = (Button) findViewById(R.id.search_go_btn);
         mListView = (ListView) findViewById(R.id.list);
         mProgress = (ProgressBar) findViewById(R.id.progress);
         mEmpty = (TextView) findViewById(R.id.empty_text);
@@ -106,6 +113,20 @@ public class RestaurantsListActivity extends CartActivity {
                 showDialog(mAdapter.getItem(position).mId);
             }
         });
+
+        mSearchBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String tok = mPrefs.getToken();
+                if(tok != null && !tok.isEmpty()){
+
+                    RestaurantsListActivity.this.search("JWT " + tok, mLoc.latitude, mLoc.longitude, mSearchQuery.getText().toString(), 25);
+                }else{
+                    Toast.makeText(getApplicationContext(), "Please login to search!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
     }
 
     @Override
@@ -290,6 +311,32 @@ public class RestaurantsListActivity extends CartActivity {
                         updateListView(items);
                     }
                 });
+        mSubscriptions.add(sub);
+    }
+
+    private void search(String authHeader, double lat, double lng, String query, int limit) {
+        setInProgress();
+        Subscription sub = DoorDashClient.getInstance()
+                .search(authHeader, lat, lng, query, limit)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<List<Restaurant>>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.i("", e.getMessage());
+                    }
+
+                    @Override
+                    public void onNext(List<Restaurant> restaurants) {
+                        updateListView(restaurants);
+                    }
+                });
+
         mSubscriptions.add(sub);
     }
 }

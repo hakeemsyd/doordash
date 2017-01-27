@@ -71,4 +71,8 @@ public class DoorDashClient {
     public Observable<MenuItem> getMenuItem(long restaurantId, long itemId){
         return mService.getMenuItem(restaurantId, itemId);
     }
+
+    public Observable<List<Restaurant>> search(String authHeader, double lat, double lng, String query, int limit){
+        return mService.search(authHeader, lat, lng, query, limit);
+    }
 }
